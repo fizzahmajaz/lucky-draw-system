@@ -1,5 +1,8 @@
 package com.fizzah.lucky_draw_system.controller;
 
+import com.fizzah.lucky_draw_system.dto.request.UserGuestRequest;
+import com.fizzah.lucky_draw_system.dto.request.UserLoginRequest;
+import com.fizzah.lucky_draw_system.dto.request.UserRegisterRequest;
 import com.fizzah.lucky_draw_system.dto.response.ApiResponse;
 import com.fizzah.lucky_draw_system.dto.response.UserResponse;
 import com.fizzah.lucky_draw_system.entity.User;
@@ -18,6 +21,49 @@ public class UserController {
     private final UserService userService;
     private final ExportService exportService;
 
+    // -------------------------------
+    // USER REGISTER
+    // -------------------------------
+    @PostMapping("/register")
+    public ApiResponse<UserResponse> register(@RequestBody UserRegisterRequest req) {
+        User user = userService.register(req);
+
+        UserResponse resp = UserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .phone(user.getPhone())
+                .department(user.getDepartment())
+                .guest(user.isGuest())
+                .build();
+
+        return ApiResponse.success("User registered", resp);
+    }
+
+    // -------------------------------
+    // USER LOGIN
+    // -------------------------------
+    @PostMapping("/login")
+    public ApiResponse<UserResponse> login(@RequestBody UserLoginRequest req) {
+        User user = userService.login(req);
+
+        UserResponse resp = UserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .phone(user.getPhone())
+                .department(user.getDepartment())
+                .guest(user.isGuest())
+                .build();
+
+        return ApiResponse.success("Login successful", resp);
+    }
+
+    // -------------------------------
+    // USER PROFILE
+    // -------------------------------
     @GetMapping("/{id}/profile")
     public ApiResponse<UserResponse> profile(@PathVariable Long id) {
 
@@ -36,6 +82,9 @@ public class UserController {
         return ApiResponse.success(resp);
     }
 
+    // -------------------------------
+    // EXPORT USER HISTORY
+    // -------------------------------
     @GetMapping("/{id}/draws/history/export")
     public ResponseEntity<ByteArrayResource> exportUserHistory(
             @PathVariable Long id,
@@ -59,4 +108,23 @@ public class UserController {
                 .contentType(format.equalsIgnoreCase("pdf") ? MediaType.APPLICATION_PDF : MediaType.TEXT_PLAIN)
                 .body(resource);
     }
+
+    @PostMapping("/guest")
+public ApiResponse<UserResponse> guestAccess(@RequestBody UserGuestRequest req) {
+
+    User guest = userService.createGuest(req);
+
+    UserResponse resp = UserResponse.builder()
+            .id(guest.getId())
+            .name(guest.getName())
+            .email(guest.getEmail())
+            .username(null)
+            .phone(guest.getPhone())
+            .department(guest.getDepartment())
+            .guest(true)
+            .build();
+
+    return ApiResponse.success("Guest access granted", resp);
+}
+
 }
