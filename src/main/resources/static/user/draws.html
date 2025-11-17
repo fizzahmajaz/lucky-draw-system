@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Active Draws</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+  <style>
+    body {
+      background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      max-width: 1100px;
+      margin: 28px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .draw-grid {
+      max-width: 1100px;
+      margin: 12px auto 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 18px;
+    }
+
+    .draw-card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(10, 30, 70, 0.06);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 170px;
+    }
+
+    .draw-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .draw-title {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .small-muted {
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .meta-pill {
+      display: inline-block;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      font-size: 13px;
+      margin-right: 6px;
+    }
+
+    .btn-join {
+      border-radius: 10px;
+      padding: 8px 12px;
+    }
+
+    .countdown {
+      font-weight: 600;
+      font-size: 14px;
+      color: #0f172a;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .top-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="top-bar">
+    <div>
+      <h3 style="margin:0">Active Draws</h3>
+      <div class="small-muted">Browse and join active draws — good luck!</div>
+    </div>
+
+    <div>
+      <button class="btn btn-outline-secondary" onclick="logoutUser()">Logout</button>
+    </div>
+  </div>
+
+  <div class="draw-grid" id="drawGrid">
+    <!-- Draw cards injected here -->
+  </div>
+
+  <!-- Join Modal (always used for joining) -->
+  <div class="modal fade" id="joinModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="joinModalTitle">Join Draw</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="joinModalBody">
+            <p><strong>Draw:</strong> <span id="jm_drawName">-</span></p>
+            <p><strong>Prize:</strong> <span id="jm_prize">-</span></p>
+            <p class="small-muted"><strong>Dates:</strong> <span id="jm_dates">-</span></p>
+            <p class="small-muted"><strong>Department:</strong> <span id="jm_department">-</span></p>
+            <hr>
+
+            <div id="jm_joinInfo">
+              <div class="mb-2">
+                <label class="form-label">Voucher Code (if required or you have one)</label>
+                <input id="jm_voucherCode" class="form-control" placeholder="Enter voucher code or leave empty">
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Account Details (JSON) - optional</label>
+                <textarea id="jm_accountDetails" class="form-control" rows="3" placeholder='{"bank_account":"123..."}'></textarea>
+                <div class="small-muted mt-1">Provide account details if draw requires payout (optional).</div>
+              </div>
+            </div>
+
+            <div id="jm_note" class="small-muted" style="margin-top:8px">
+              Please confirm details before joining. You can join only once per draw.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="jm_joinBtn" class="btn btn-primary" onclick="confirmJoin()">Join Now</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/js/common.js"></script>
+
+  <script>
+    // Global state
+    var activeDrawsList = []; // will hold draw objects
+    var timerHandles = {}; // map drawId -> interval handle
+    var currentJoinDrawId = null;
+
+    // On load
+    window.onload = function () {
+      var uid = localStorage.getItem("userId");
+      if (!uid) {
+        // not logged in — redirect to login page
+        // but allow guest mode came from login page; still ensure they have userId
+        // guide them to login/register if missing
+        showToast("Please login or continue as guest", false);
+        setTimeout(function () { redirectTo("/user/login.html"); }, 900);
+        return;
+      }
+      loadActiveDraws();
+    };
+
+    // Load active draws
+    function loadActiveDraws() {
+      apiFetch("/draws/active?page=0&size=50", "GET")
+        .then(function (json) {
+          if (!json || !json.success) {
+            var grid = document.getElementById("drawGrid");
+            grid.innerHTML = "<div class='small-muted' style='padding:16px'>No active draws found</div>";
+            return;
+          }
+          // clear previous timers
+          clearAllTimers();
+
+          var content = json.data && json.data.content ? json.data.content : [];
+          activeDrawsList = content;
+          renderDraws(content);
+        });
+    }
+
+    // Render draw cards
+    function renderDraws(list) {
+      var grid = document.getElementById("drawGrid");
+      grid.innerHTML = "";
+      for (var i = 0; i < list.length; i++) {
+        var d = list[i];
+
+        var card = document.createElement("div");
+        card.className = "draw-card";
+
+        // build header
+        var header = "<div class='draw-header'><div class='draw-title'>" + escapeHtml(d.name) + "</div>" +
+          "<div><span class='meta-pill'>" + (d.prizeType || '-') + "</span></div></div>";
+
+        // build body lines
+        var prizeLine = (d.prizeType === "CASH" ? ("Prize: " + (d.prizeAmount !== null && d.prizeAmount !== undefined ? d.prizeAmount : "-")) : ("Voucher: " + (d.voucherCode || "-")));
+        var deptLine = d.department ? ("Department: " + escapeHtml(d.department)) : "";
+        var datesLine = "Start: " + (d.startDate || "-") + " • End: " + (d.endDate || "-");
+        var participantsLine = "Participants: " + (d.totalParticipants !== null && d.totalParticipants !== undefined ? d.totalParticipants : "-");
+        var timerDisplay = "<div class='countdown' id='cd_" + d.id + "'>Loading time...</div>";
+
+        // join button - determine if user already joined (backend doesn't supply that here for /draws/active),
+        // so we attempt to show join always. Backend will prevent duplicates.
+        var joinBtnHtml = "<button class='btn btn-primary btn-join' id='join_btn_" + d.id + "' onclick='openJoinModal(" + d.id + ")'>Join</button>";
+
+        var footer = "<div class='card-footer'><div>" + timerDisplay + "</div><div>" + joinBtnHtml + "</div></div>";
+
+        card.innerHTML = header + "<div style='margin-top:8px' class='small-muted'>" + escapeHtml(prizeLine) + "</div>" +
+          "<div class='small-muted' style='margin-top:6px'>" + escapeHtml(datesLine) + "</div>" +
+          "<div class='small-muted' style='margin-top:6px'>" + escapeHtml(deptLine) + "</div>" +
+          "<div class='small-muted' style='margin-top:6px'>" + escapeHtml(participantsLine) + "</div>" + footer;
+
+        grid.appendChild(card);
+
+        // initialize countdown timer
+        startCountdownForDraw(d);
+      }
+    }
+
+    function startCountdownForDraw(draw) {
+      try {
+        var elId = "cd_" + draw.id;
+        var el = document.getElementById(elId);
+        if (!el) return;
+
+        // parse endDate (backend sends ISO) - safe parse
+        var end = new Date(draw.endDate);
+        var start = new Date(draw.startDate);
+        // clear existing if any
+        if (timerHandles[draw.id]) {
+          clearInterval(timerHandles[draw.id]);
+        }
+
+        var handle = setInterval(function () {
+          var now = new Date();
+          var diff = end.getTime() - now.getTime();
+          if (diff <= 0) {
+            el.innerText = "Draw ended";
+            clearInterval(timerHandles[draw.id]);
+            // optionally refresh draws list when ended
+            return;
+          }
+          var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          var mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          var secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+          var parts = [];
+          if (days > 0) parts.push(days + "d");
+          parts.push(String(hours).padStart(2, "0") + "h");
+          parts.push(String(mins).padStart(2, "0") + "m");
+          parts.push(String(secs).padStart(2, "0") + "s");
+
+          el.innerText = "Ends in: " + parts.join(" ");
+        }, 1000);
+
+        timerHandles[draw.id] = handle;
+      } catch (e) {
+        // ignore timer errors
+      }
+    }
+
+    function clearAllTimers() {
+      var keys = Object.keys(timerHandles);
+      for (var i = 0; i < keys.length; i++) {
+        try {
+          clearInterval(timerHandles[keys[i]]);
+        } catch (e) { }
+      }
+      timerHandles = {};
+    }
+
+    // Open modal for join (Option C: always show modal)
+    function openJoinModal(drawId) {
+      currentJoinDrawId = drawId;
+      // find draw object
+      var drawObj = null;
+      for (var i = 0; i < activeDrawsList.length; i++) {
+        if (activeDrawsList[i].id === drawId) {
+          drawObj = activeDrawsList[i];
+          break;
+        }
+      }
+      if (!drawObj) {
+        // if not in active list, fetch explicitly
+        apiFetch("/draws/" + drawId, "GET").then(function (json) {
+          if (!json || !json.success) {
+            showToast("Cannot load draw details", false);
+            return;
+          }
+          prepareJoinModal(json.data);
+        });
+      } else {
+        prepareJoinModal(drawObj);
+      }
+    }
+
+    function prepareJoinModal(d) {
+      document.getElementById("jm_drawName").innerText = d.name || "-";
+      if (d.prizeType === "CASH") {
+        document.getElementById("jm_prize").innerText = "Cash: " + (d.prizeAmount !== null && d.prizeAmount !== undefined ? d.prizeAmount : "-");
+      } else {
+        document.getElementById("jm_prize").innerText = "Voucher: " + (d.voucherCode || "-");
+      }
+      document.getElementById("jm_dates").innerText = (d.startDate || "-") + " → " + (d.endDate || "-");
+      document.getElementById("jm_department").innerText = d.department || "-";
+
+      // Clear inputs
+      document.getElementById("jm_voucherCode").value = "";
+      document.getElementById("jm_accountDetails").value = "";
+
+      // show modal
+      var m = new bootstrap.Modal(document.getElementById('joinModal'));
+      m.show();
+    }
+
+    // Confirm join action
+    function confirmJoin() {
+      var uid = localStorage.getItem("userId");
+      if (!uid) {
+        showToast("Please login first", false);
+        setTimeout(function () { redirectTo("/user/login.html"); }, 700);
+        return;
+      }
+      if (!currentJoinDrawId) {
+        showToast("No draw selected", false);
+        return;
+      }
+
+      var voucherCode = document.getElementById("jm_voucherCode").value.trim();
+      var accountDetails = document.getElementById("jm_accountDetails").value.trim();
+      var accJson = "{}";
+      if (accountDetails !== "") {
+        // validate JSON
+        try {
+          var obj = JSON.parse(accountDetails);
+          accJson = JSON.stringify(obj);
+        } catch (e) {
+          showToast("Account Details must be valid JSON", false);
+          return;
+        }
+      }
+
+      var body = {
+        userId: parseInt(localStorage.getItem("userId"), 10),
+        voucherCode: voucherCode === "" ? null : voucherCode,
+        accountDetailsJson: accJson
+      };
+
+      // disable join button while request in process
+      var btn = document.getElementById("jm_joinBtn");
+      btn.disabled = true;
+      btn.innerText = "Joining...";
+
+      apiFetch("/draws/" + currentJoinDrawId + "/join", "POST", body)
+        .then(function (json) {
+          btn.disabled = false;
+          btn.innerText = "Join Now";
+          if (!json || !json.success) {
+            var msg = (json && json.message) ? json.message : "Failed to join draw";
+            showToast(msg, false);
+            return;
+          }
+
+          // Hide modal
+          var modalEl = document.getElementById('joinModal');
+          var bs = bootstrap.Modal.getInstance(modalEl);
+          if (bs) bs.hide();
+
+          showToast("Joined draw successfully", true);
+
+          // Optionally update UI: increment participants count and disable join for that draw
+          updateJoinedState(currentJoinDrawId);
+        })
+        .catch(function (err) {
+          btn.disabled = false;
+          btn.innerText = "Join Now";
+          showToast("Network error joining draw", false);
+        });
+    }
+
+    function updateJoinedState(drawId) {
+      // Update the participants number displayed and disable join button
+      // Also refresh draws list after a small delay
+      setTimeout(function () {
+        loadActiveDraws();
+      }, 600);
+    }
+
+    // logout helper
+    function logoutUser() {
+      localStorage.removeItem("userId");
+      localStorage.removeItem("userName");
+      showToast("Logged out", true);
+      setTimeout(function () { redirectTo("/user/login.html"); }, 600);
+    }
+
+    // Basic HTML escape helper (avoid XSS)
+    function escapeHtml(s) {
+      if (s === undefined || s === null) return "";
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+  </script>
+
+</body>
+</html>

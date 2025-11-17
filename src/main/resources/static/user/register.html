@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>User Register</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+  <style>
+    body { background: linear-gradient(180deg,#f7fbff 0%, #ffffff 100%); }
+    .center-card { max-width:920px; margin:48px auto; border-radius:14px; overflow:hidden; box-shadow:0 12px 40px rgba(13, 38, 76, 0.08); }
+    .left-side { background:linear-gradient(180deg,#3b82f6,#60a5fa); color:white; padding:36px; min-height:420px; display:flex; flex-direction:column; justify-content:center; }
+    .right-side { background:white; padding:30px; }
+    .brand-big { font-size:28px; font-weight:700; margin-bottom:8px; }
+    .muted { color:#6b7280; }
+    .form-control { border-radius:10px; }
+    .btn-primary { border-radius:10px; padding:10px 16px; }
+    .small-note { font-size:13px; color:#94a3b8; }
+    .voucher-row .form-control { border-top-left-radius:10px; border-bottom-left-radius:10px; }
+    .voucher-row .btn { border-top-right-radius:10px; border-bottom-right-radius:10px; }
+    @media (max-width:900px) {
+      .left-side { display:none; }
+      .center-card { margin:18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="center-card d-flex">
+      <div class="left-side col-md-5">
+        <div>
+          <div class="brand-big">LuckyDraw</div>
+          <div style="font-weight:600">Join draws • Win prizes • Redeem vouchers</div>
+        </div>
+        <div style="margin-top:20px;">
+          <p class="small-note">Register quickly and start joining active draws. Guest access also available.</p>
+          <ul class="small-note">
+            <li>No spam — email used for notifications</li>
+            <li>Voucher codes are optional</li>
+            <li>You can view winners in your account</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="right-side col-md-7">
+        <h4 style="margin-bottom:6px">Create your account</h4>
+        <p class="muted" style="margin-bottom:16px">Fill the details below to register</p>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Full Name</label>
+            <input id="name" class="form-control" placeholder="Your full name">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input id="email" class="form-control" placeholder="you@example.com" type="email">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Username</label>
+            <input id="username" class="form-control" placeholder="username">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            <input id="phone" class="form-control" placeholder="03001234567">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Department</label>
+            <input id="department" class="form-control" placeholder="Marketing (optional)">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">External ID</label>
+            <input id="externalId" class="form-control" placeholder="EMP-101 (optional)">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Password</label>
+            <input id="password" type="password" class="form-control" placeholder="Choose a secure password">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Confirm Password</label>
+            <input id="confirmPassword" type="password" class="form-control" placeholder="Confirm password">
+          </div>
+
+          <div class="col-12 voucher-row d-flex align-items-center">
+            <label class="form-label w-100">Voucher Code (optional)</label>
+            <div class="d-flex w-100">
+              <input id="voucherCode" class="form-control" placeholder="MC-1001 (optional)">
+              <button id="validateVoucherBtn" class="btn btn-outline-secondary ms-2" onclick="validateVoucher()">Validate</button>
+            </div>
+            <div id="voucherValidMsg" class="small-note mt-1"></div>
+          </div>
+
+          <div class="col-12">
+            <button class="btn btn-primary w-100" onclick="submitRegister()">Create Account</button>
+          </div>
+
+          <div class="col-12 text-center">
+            <p class="small-note">Already have an account? <a href="/user/login.html">Login here</a></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script src="/assets/js/common.js"></script>
+
+<script>
+/* Normal functions only */
+
+function validateVoucher() {
+  var code = document.getElementById("voucherCode").value.trim();
+  var msg = document.getElementById("voucherValidMsg");
+  msg.innerText = "";
+  if (code === "") {
+    msg.innerText = "Enter a voucher code to validate";
+    return;
+  }
+  apiFetch("/vouchers/validate", "POST", { code: code })
+    .then(function(json) {
+      if (!json || !json.success) {
+        msg.innerText = "Invalid voucher";
+        return;
+      }
+      msg.innerText = "Voucher valid: " + (json.data && json.data.name ? json.data.name : code);
+    });
+}
+
+function submitRegister() {
+  var name = document.getElementById("name").value.trim();
+  var email = document.getElementById("email").value.trim();
+  var username = document.getElementById("username").value.trim();
+  var phone = document.getElementById("phone").value.trim();
+  var department = document.getElementById("department").value.trim();
+  var externalId = document.getElementById("externalId").value.trim();
+  var password = document.getElementById("password").value;
+  var confirmPassword = document.getElementById("confirmPassword").value;
+  var voucherCode = document.getElementById("voucherCode").value.trim();
+
+  if (name === "" || email === "" || username === "" || phone === "" || password === "" || confirmPassword === "") {
+    showToast("Please fill all required fields", false);
+    return;
+  }
+  if (password !== confirmPassword) {
+    showToast("Passwords do not match", false);
+    return;
+  }
+
+  var body = {
+    name: name,
+    email: email,
+    username: username,
+    phone: phone,
+    department: department === "" ? null : department,
+    externalId: externalId === "" ? null : externalId,
+    password: password,
+    confirmPassword: confirmPassword,
+    voucherCode: voucherCode === "" ? null : voucherCode
+  };
+
+  apiFetch("/users/register", "POST", body)
+    .then(function(json) {
+      if (!json || !json.success) {
+        var err = json && json.message ? json.message : "Registration failed";
+        showToast(err, false);
+        return;
+      }
+
+      // success
+      var u = json.data;
+      if (u && u.id) {
+        localStorage.setItem("userId", String(u.id));
+        localStorage.setItem("userName", u.name || u.username || "");
+      }
+      showToast("Registration successful", true);
+      // redirect to active draws
+      setTimeout(function() { redirectTo("/user/draws.html"); }, 700);
+    });
+}
+</script>
+
+</body>
+</html>
