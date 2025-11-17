@@ -6,6 +6,7 @@ import com.fizzah.lucky_draw_system.dto.request.ExecuteAlgorithmRequest;
 import com.fizzah.lucky_draw_system.dto.request.ParticipantFilterRequest;
 import com.fizzah.lucky_draw_system.dto.response.ApiResponse;
 import com.fizzah.lucky_draw_system.dto.response.WinnerResultResponse;
+import com.fizzah.lucky_draw_system.entity.ParticipantDraw;
 import com.fizzah.lucky_draw_system.entity.User;
 import com.fizzah.lucky_draw_system.entity.WinnerHistory;
 import com.fizzah.lucky_draw_system.repository.ParticipantDrawRepository;
@@ -155,5 +156,35 @@ public class AdminController {
     public ApiResponse<?> filterParticipants(@RequestBody ParticipantFilterRequest request) {
         return ApiResponse.success(adminParticipantService.filterParticipants(request));
     }
+
+    @GetMapping("/participants/all")
+public ApiResponse<?> getAllParticipants() {
+
+    List<ParticipantDraw> list = participantDrawRepository.findAll();
+
+    List<ParticipantResponse> resp = list.stream().map(pd -> {
+        User u = pd.getUser();
+
+        return ParticipantResponse.builder()
+                .id(pd.getId())
+                .userId(u.getId())
+                .name(u.getName())
+                .email(u.getEmail())
+                .phone(u.getPhone())
+                .department(u.getDepartment())
+                .externalId(u.getExternalId())
+                .guest(u.isGuest())
+                .drawId(pd.getDraw().getId())
+                .drawName(pd.getDraw().getName())
+                .voucherUsed(pd.getVoucherUsed() != null ? pd.getVoucherUsed().getCode() : null)
+                .joinedAt(pd.getJoinedAt())
+                .winner(pd.isWinner())
+                .redeemed(pd.isRedeemed())
+                .build();
+
+    }).toList();
+
+    return ApiResponse.success(resp);
+}
 
 }

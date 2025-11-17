@@ -37,4 +37,8 @@ public class VoucherController {
                                  @RequestParam String code) {
         return voucherService.redeemPrizeVoucher(userId, drawId, code);
     }
+
+
+
+
 }

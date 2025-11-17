@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Participants</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <!-- Central CSS -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+
+    <style>
+        .sidebar {
+            width: 240px;
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            padding: 20px;
+        }
+        
+        .sidebar-item {
+            padding: 12px 15px;
+            border-radius: 14px;
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+        
+        .sidebar-item:hover {
+            background: #f3f4f6;
+        }
+        
+        .sidebar-active {
+            background: #e6f0ff;
+        }
+        
+        .content {
+            margin-left: 260px;
+            padding: 30px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="toast-box" id="toast-box"></div>
+
+    <div class="sidebar">
+        <h4 class="mb-4">Admin Panel</h4>
+
+        <div class="sidebar-item" onclick="redirectTo('/admin/dashboard.html')">Dashboard</div>
+        <div class="sidebar-item" onclick="redirectTo('/admin/create-draw.html')">Create Draw</div>
+        <div class="sidebar-item" onclick="redirectTo('/admin/view-draws.html')">View Draws</div>
+        <div class="sidebar-item" onclick="redirectTo('/admin/create-voucher.html')">Create Voucher</div>
+        <div class="sidebar-item sidebar-active">Participants</div>
+        <div class="sidebar-item" onclick="redirectTo('/admin/winners.html')">Winners</div>
+        <div class="sidebar-item" onclick="redirectTo('/admin/login.html')">Logout</div>
+    </div>
+
+    <div class="content">
+        <h2 class="mb-4">Participants (All System Users)</h2>
+
+        <!-- Filters -->
+        <div class="card-apple mb-4">
+            <div class="row g-3">
+
+                <!-- Winner filter -->
+                <div class="col-md-3">
+                    <select id="filterWinner" class="form-control" onchange="loadParticipants()">
+                        <option value="">Winner (All)</option>
+                        <option value="true">Winner Only</option>
+                        <option value="false">Non-Winner</option>
+                    </select>
+                </div>
+
+                <!-- Guest / Registered filter -->
+                <div class="col-md-3">
+                    <select id="filterUserType" class="form-control" onchange="loadParticipants()">
+                        <option value="">User Type (All)</option>
+                        <option value="guest">Guest Only</option>
+                        <option value="registered">Registered Only</option>
+                    </select>
+                </div>
+
+                <!-- Department filter -->
+                <div class="col-md-2">
+                    <input id="filterDepartment" class="form-control" placeholder="Department" oninput="loadParticipants()">
+                </div>
+
+                <!-- Voucher filter -->
+                <div class="col-md-2">
+                    <input id="filterVoucher" class="form-control" placeholder="Voucher Code" oninput="loadParticipants()">
+                </div>
+
+                <!-- Export buttons -->
+                <div class="col-md-2 text-end">
+                    <button class="btn btn-dark me-2" onclick="exportCsv()">CSV</button>
+                    <button class="btn btn-danger" onclick="exportPdf()">PDF</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Participants Table -->
+        <div class="card-apple">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>User Type</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Department</th>
+                            <th>External ID</th>
+                            <th>Voucher Used</th>
+                            <th>Joined At</th>
+                            <th>Winner</th>
+                        </tr>
+                    </thead>
+                    <tbody id="participantsTbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/assets/js/common.js"></script>
+
+    <script>
+        window.onload = function() {
+            loadParticipants();
+        };
+
+        function loadParticipants() {
+
+            apiFetch("/admins/participants/all", "GET")
+                .then(function(json) {
+
+                    if (!json || !json.success) {
+                        showToast("Failed to load participants", false);
+                        return;
+                    }
+
+                    var list = json.data;
+                    var tbody = document.getElementById("participantsTbody");
+                    tbody.innerHTML = "";
+
+                    var filterWinner = document.getElementById("filterWinner").value;
+                    var filterUserType = document.getElementById("filterUserType").value;
+                    var filterDept = document.getElementById("filterDepartment").value.toLowerCase();
+                    var filterVoucher = document.getElementById("filterVoucher").value.toLowerCase();
+
+                    for (var i = 0; i < list.length; i++) {
+                        var p = list[i];
+
+                        // User type filtering
+                        if (filterUserType === "guest" && p.guest !== true) continue;
+                        if (filterUserType === "registered" && p.guest === true) continue;
+
+                        // Winner filter
+                        if (filterWinner !== "" && String(p.winner) !== filterWinner) continue;
+
+                        // Department filter
+                        if (filterDept && (!p.department || p.department.toLowerCase().indexOf(filterDept) === -1)) continue;
+
+                        // Voucher filter
+                        if (filterVoucher && (!p.voucherUsed || p.voucherUsed.toLowerCase().indexOf(filterVoucher) === -1)) continue;
+
+                        var tr = document.createElement("tr");
+
+                        tr.innerHTML =
+                            "<td>" + p.name + "</td>" +
+                            "<td>" + (p.guest ? "<span class='badge bg-warning text-dark'>Guest</span>" : "Registered") + "</td>" +
+                            "<td>" + (p.email || "-") + "</td>" +
+                            "<td>" + (p.phone || "-") + "</td>" +
+                            "<td>" + (p.department || "-") + "</td>" +
+                            "<td>" + (p.externalId || "-") + "</td>" +
+                            "<td>" + (p.voucherUsed || "-") + "</td>" +
+                            "<td>" + (p.joinedAt || "-") + "</td>" +
+                            "<td>" + (p.winner ? "Yes" : "No") + "</td>";
+
+                        tbody.appendChild(tr);
+                    }
+
+                });
+        }
+
+        function exportCsv() {
+            redirectTo("/admins/participants/export?format=csv");
+        }
+
+        function exportPdf() {
+            redirectTo("/admins/participants/export?format=pdf");
+        }
+    </script>
+
+</body>
+
+</html>
