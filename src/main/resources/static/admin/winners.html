@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Winner Selection</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+
+    <style>
+        .sidebar {
+            width: 240px;
+            background: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            padding: 20px;
+        }
+        .sidebar-item {
+            padding: 12px 15px;
+            border-radius: 14px;
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+        .sidebar-item:hover { background: #f3f4f6; }
+        .sidebar-active { background: #e6f0ff; }
+        .content { margin-left: 260px; padding: 30px; }
+        .meta-pill { display:inline-block; padding:6px 10px; border-radius:12px; background:#f3f4f6; margin-left:8px; font-size:14px; }
+    </style>
+</head>
+
+<body>
+
+<div class="toast-box" id="toast-box"></div>
+
+<div class="sidebar">
+    <h4 class="mb-4">Admin Panel</h4>
+
+    <div class="sidebar-item" onclick="redirectTo('/admin/dashboard.html')">Dashboard</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/create-draw.html')">Create Draw</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/view-draws.html')">View Draws</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/create-voucher.html')">Create Voucher</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/participants.html')">Participants</div>
+    <div class="sidebar-item sidebar-active">Winners</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/login.html')">Logout</div>
+</div>
+
+<div class="content">
+
+    <h2 class="mb-4">Draw Winner Selection</h2>
+
+    <!-- Draw Selector -->
+    <div class="card-apple mb-4">
+        <label class="mb-2"><strong>Select Draw</strong></label>
+        <select id="drawSelect" class="form-control" onchange="onDrawSelected()">
+            <option value="">-- Select Draw --</option>
+        </select>
+    </div>
+
+    <!-- Draw Info -->
+    <div class="card-apple mb-4" id="drawInfoBox" style="display:none;">
+        <div class="row">
+            <div class="col-md-4"><strong>Draw Name:</strong> <span id="drawName">-</span></div>
+            <div class="col-md-4"><strong>Prize Type:</strong> <span id="drawPrizeType">-</span></div>
+            <div class="col-md-4"><strong>Total Participants:</strong> <span id="totalParticipants" class="meta-pill">-</span>
+                <strong style="margin-left:12px">Max Winners:</strong> <span id="drawMaxWinners" class="meta-pill">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Winner Selection -->
+    <div class="card-apple mb-4" id="selectionBox" style="display:none;">
+        <h5>Select Winners</h5>
+        <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+                <input type="number" id="winnerCount" class="form-control" placeholder="Number of Winners">
+            </div>
+            <div class="col-md-4">
+                <button id="runBtn" class="btn btn-dark" onclick="runSelection()">Run Selection</button>
+                <button id="resetBtn" class="btn btn-outline-secondary ms-2" onclick="clearWinners()">Reset Listed Winners</button>
+            </div>
+            <div class="col-md-4 text-muted small">
+                <span id="selectionHelp">Select number then press <strong>Run Selection</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Winners Table -->
+    <div class="card-apple" id="winnersTableBox" style="display:none;">
+        <h5 class="mb-3">Winners</h5>
+
+        <div class="text-end mb-3">
+            <button class="btn btn-dark me-2" onclick="exportCsv()">CSV</button>
+            <button class="btn btn-danger" onclick="exportPdf()">PDF</button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th>User Name</th>
+                    <th>Email</th>
+                    <th>Prize Amount</th>
+                    <th>Voucher Code</th>
+                    <th>Announced At</th>
+                    <th>Redeemed</th>
+                </tr>
+                </thead>
+                <tbody id="winnerTbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="/assets/js/common.js"></script>
+
+<script>
+/* Final upgraded winners page JS - no optional chaining, no ?? */
+
+var selectedDrawId = null;
+
+// load draw list on page load
+window.onload = function() {
+    loadAllDraws();
+
+    // if URL has id param, select it automatically
+    try {
+        var uParams = new URLSearchParams(window.location.search);
+        var idFromUrl = uParams.get('id');
+        if (idFromUrl) {
+            // wait for draws to load then set selection
+            setTimeout(function() {
+                var sel = document.getElementById('drawSelect');
+                if (sel) {
+                    sel.value = idFromUrl;
+                    onDrawSelected();
+                }
+            }, 450);
+        }
+    } catch (e) {
+        // ignore
+    }
+};
+
+function loadAllDraws() {
+    apiFetch("/draws?page=0&size=200", "GET")
+        .then(function(json) {
+            if (!json || !json.success) {
+                showToast("Failed to load draws", false);
+                return;
+            }
+            var list = json.data.content;
+            var sel = document.getElementById("drawSelect");
+            sel.innerHTML = "<option value=\"\">-- Select Draw --</option>";
+            for (var i = 0; i < list.length; i++) {
+                var d = list[i];
+                var opt = document.createElement("option");
+                opt.value = d.id;
+                opt.textContent = d.name + " — " + (d.status || '');
+                sel.appendChild(opt);
+            }
+        });
+}
+
+function onDrawSelected() {
+    selectedDrawId = document.getElementById("drawSelect").value;
+
+    if (!selectedDrawId) {
+        // hide sections
+        document.getElementById("drawInfoBox").style.display = "none";
+        document.getElementById("selectionBox").style.display = "none";
+        document.getElementById("winnersTableBox").style.display = "none";
+        return;
+    }
+
+    document.getElementById("drawInfoBox").style.display = "block";
+    document.getElementById("selectionBox").style.display = "block";
+    document.getElementById("winnersTableBox").style.display = "block";
+
+    // reset winner table visually
+    clearWinners();
+
+    loadDrawInfo();
+    loadWinners();
+}
+
+function loadDrawInfo() {
+    apiFetch("/draws/" + selectedDrawId, "GET")
+        .then(function(json) {
+            if (!json || !json.success) {
+                showToast("Cannot load draw details", false);
+                return;
+            }
+            var d = json.data;
+            document.getElementById("drawName").innerText = d.name || "-";
+            document.getElementById("drawPrizeType").innerText = d.prizeType || "-";
+            // total participants and max winners if present
+            document.getElementById("totalParticipants").innerText = (d.totalParticipants !== undefined && d.totalParticipants !== null) ? d.totalParticipants : "-";
+            document.getElementById("drawMaxWinners").innerText = (d.maxWinners !== undefined && d.maxWinners !== null) ? d.maxWinners : "-";
+            // if maxWinners exists, set placeholder
+            if (d.maxWinners) {
+                document.getElementById("winnerCount").placeholder = "Max allowed: " + d.maxWinners;
+            }
+        });
+}
+
+function clearWinners() {
+    var tbody = document.getElementById("winnerTbody");
+    if (tbody) tbody.innerHTML = "";
+    showToast("Winners list reset (local view).", true);
+}
+
+// run selection
+function runSelection() {
+    if (!selectedDrawId) {
+        showToast("Select a draw first", false);
+        return;
+    }
+    var adminId = localStorage.getItem("adminId");
+    if (!adminId) {
+        showToast("Not logged in as admin", false);
+        return;
+    }
+
+    var countVal = document.getElementById("winnerCount").value;
+    var count = parseInt(countVal, 10);
+    if (!count || isNaN(count) || count <= 0) {
+        showToast("Enter valid number of winners", false);
+        return;
+    }
+
+    // disable run button while running
+    var runBtn = document.getElementById("runBtn");
+    runBtn.disabled = true;
+    runBtn.innerText = "Running...";
+
+    apiFetch("/admins/draws/" + selectedDrawId + "/execute?adminId=" + adminId, "POST", {
+        numberOfWinners: count
+    }).then(function(json) {
+
+        // re-enable button
+        runBtn.disabled = false;
+        runBtn.innerText = "Run Selection";
+
+        if (!json) {
+            showToast("No response from server", false);
+            return;
+        }
+        if (!json.success) {
+            // show backend message if present
+            var msg = json.message ? json.message : "Winner selection failed";
+            showToast(msg, false);
+            return;
+        }
+
+        // Selection accepted — reload winners from server (server may return the new winners via GET)
+        showToast("Winners selected successfully.", true);
+        // Clear then reload (avoid duplicates)
+        clearWinners();
+        loadWinners();
+    }).catch(function(err) {
+        runBtn.disabled = false;
+        runBtn.innerText = "Run Selection";
+        showToast("Network error", false);
+    });
+}
+
+// load winners (clears and renders unique)
+function loadWinners() {
+    if (!selectedDrawId) return;
+
+    apiFetch("/draws/" + selectedDrawId + "/winners?page=0&size=200", "GET")
+        .then(function(json) {
+
+            if (!json || !json.success || !json.data) {
+                // if backend returns empty, just clear table
+                var tbodyEmpty = document.getElementById("winnerTbody");
+                if (tbodyEmpty) tbodyEmpty.innerHTML = "";
+                return;
+            }
+
+            var list = json.data.content || [];
+            var tbody = document.getElementById("winnerTbody");
+            tbody.innerHTML = "";
+
+            // dedupe by winner id (safety)
+            var seen = {};
+            for (var i = 0; i < list.length; i++) {
+                var w = list[i];
+                if (!w) continue;
+                var wid = w.id !== undefined && w.id !== null ? String(w.id) : ("i" + i);
+                if (seen[wid]) continue;
+                seen[wid] = true;
+
+                // map backend fields (use available names)
+                // Backend returns: id, userId, name, email, prizeAmount, voucherCode, announcedAt, redeemed
+                var uname = (w.name !== undefined && w.name !== null) ? w.name : (w.userName !== undefined ? w.userName : "-");
+                var uemail = (w.email !== undefined && w.email !== null) ? w.email : (w.userEmail !== undefined ? w.userEmail : "-");
+                var amount = (w.prizeAmount !== undefined && w.prizeAmount !== null) ? w.prizeAmount : "-";
+                var vcode = (w.voucherCode !== undefined && w.voucherCode !== null) ? w.voucherCode : "-";
+                var announced = (w.announcedAt !== undefined && w.announcedAt !== null) ? w.announcedAt : "-";
+                var redeemed = (w.redeemed === true) ? "<span class='badge bg-success text-white'>Yes</span>" : "<span class='badge bg-secondary text-white'>No</span>";
+
+                var tr = document.createElement("tr");
+                tr.innerHTML =
+                    "<td>" + escapeHtml(uname) + "</td>" +
+                    "<td>" + escapeHtml(uemail) + "</td>" +
+                    "<td>" + escapeHtml(String(amount)) + "</td>" +
+                    "<td>" + escapeHtml(vcode) + "</td>" +
+                    "<td>" + escapeHtml(announced) + "</td>" +
+                    "<td>" + redeemed + "</td>";
+
+                tbody.appendChild(tr);
+            }
+
+        });
+}
+
+function exportCsv() {
+    if (!selectedDrawId) { showToast("Select draw first", false); return; }
+    redirectTo("/admins/draws/" + selectedDrawId + "/winners/export?format=csv");
+}
+
+function exportPdf() {
+    if (!selectedDrawId) { showToast("Select draw first", false); return; }
+    redirectTo("/admins/draws/" + selectedDrawId + "/winners/export?format=pdf");
+}
+
+/* small helper to avoid XSS when inserting server strings */
+function escapeHtml(str) {
+    if (str === null || str === undefined) return "-";
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+</script>
+
+</body>
+</html>

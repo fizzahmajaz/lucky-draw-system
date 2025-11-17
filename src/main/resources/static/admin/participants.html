@@ -22,22 +22,22 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
             padding: 20px;
         }
-        
+
         .sidebar-item {
             padding: 12px 15px;
             border-radius: 14px;
             cursor: pointer;
             margin-bottom: 6px;
         }
-        
+
         .sidebar-item:hover {
             background: #f3f4f6;
         }
-        
+
         .sidebar-active {
             background: #e6f0ff;
         }
-        
+
         .content {
             margin-left: 260px;
             padding: 30px;
@@ -49,6 +49,7 @@
 
     <div class="toast-box" id="toast-box"></div>
 
+    <!-- Sidebar -->
     <div class="sidebar">
         <h4 class="mb-4">Admin Panel</h4>
 
@@ -61,8 +62,9 @@
         <div class="sidebar-item" onclick="redirectTo('/admin/login.html')">Logout</div>
     </div>
 
+    <!-- Content -->
     <div class="content">
-        <h2 class="mb-4">Participants (All System Users)</h2>
+        <h2 class="mb-4">Participants</h2>
 
         <!-- Filters -->
         <div class="card-apple mb-4">
@@ -105,7 +107,7 @@
             </div>
         </div>
 
-        <!-- Participants Table -->
+        <!-- Table -->
         <div class="card-apple">
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -120,6 +122,7 @@
                             <th>Voucher Used</th>
                             <th>Joined At</th>
                             <th>Winner</th>
+                            <th>Info</th>
                         </tr>
                     </thead>
                     <tbody id="participantsTbody"></tbody>
@@ -132,21 +135,27 @@
     <script src="/assets/js/common.js"></script>
 
     <script>
-        window.onload = function() {
+        var drawId = new URLSearchParams(window.location.search).get("id");
+
+        window.onload = function () {
+            if (!drawId) {
+                showToast("No draw selected", false);
+                return;
+            }
             loadParticipants();
         };
 
         function loadParticipants() {
 
-            apiFetch("/admins/participants/all", "GET")
-                .then(function(json) {
+            apiFetch("/draws/" + drawId + "/participants?page=0&size=200", "GET")
+                .then(function (json) {
 
                     if (!json || !json.success) {
                         showToast("Failed to load participants", false);
                         return;
                     }
 
-                    var list = json.data;
+                    var list = json.data.content;
                     var tbody = document.getElementById("participantsTbody");
                     tbody.innerHTML = "";
 
@@ -158,7 +167,7 @@
                     for (var i = 0; i < list.length; i++) {
                         var p = list[i];
 
-                        // User type filtering
+                        // User type filter
                         if (filterUserType === "guest" && p.guest !== true) continue;
                         if (filterUserType === "registered" && p.guest === true) continue;
 
@@ -182,7 +191,10 @@
                             "<td>" + (p.externalId || "-") + "</td>" +
                             "<td>" + (p.voucherUsed || "-") + "</td>" +
                             "<td>" + (p.joinedAt || "-") + "</td>" +
-                            "<td>" + (p.winner ? "Yes" : "No") + "</td>";
+                            "<td>" + (p.winner ? "Yes" : "No") + "</td>" +
+                            "<td>" +
+                            "<button class='btn btn-sm btn-info' onclick='showParticipantDetail(" + p.id + ")'>Info</button>" +
+                            "</td>";
 
                         tbody.appendChild(tr);
                     }
@@ -191,11 +203,11 @@
         }
 
         function exportCsv() {
-            redirectTo("/admins/participants/export?format=csv");
+            redirectTo("/admins/draws/" + drawId + "/participants/export?format=csv");
         }
 
         function exportPdf() {
-            redirectTo("/admins/participants/export?format=pdf");
+            redirectTo("/admins/draws/" + drawId + "/participants/export?format=pdf");
         }
     </script>
 
