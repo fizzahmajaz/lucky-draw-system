@@ -55,3 +55,4 @@ function showToast(message, success) {
 function redirectTo(url) {
     window.location.href = url;
 }
+

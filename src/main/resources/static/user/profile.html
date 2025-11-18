@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>User Profile</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+  <style>
+    body {
+      background: #f1f5f9;
+      min-height: 100vh;
+    }
+
+    .profile-container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.07);
+    }
+
+    .avatar-box {
+      width: 100px;
+      height: 100px;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1e3a8a;
+      font-size: 40px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: auto;
+    }
+
+    .field-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 3px;
+    }
+
+    .field-value {
+      font-size: 15px;
+      font-weight: 500;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 14px;
+    }
+
+    .top-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .badge-role {
+      background: #fef9c3;
+      color: #854d0e;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      margin-top: 6px;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="profile-container">
+
+    <div class="avatar-box" id="avatarLetter">U</div>
+
+    <div class="top-header">
+      <h3 id="profileName">User</h3>
+      <span id="userRole" class="badge-role">Registered User</span>
+    </div>
+
+    <!-- Profile Fields -->
+    <div>
+
+      <div class="field-label">Email</div>
+      <div class="field-value" id="profileEmail">-</div>
+
+      <div class="field-label">Username</div>
+      <div class="field-value" id="profileUsername">-</div>
+
+      <div class="field-label">Phone Number</div>
+      <div class="field-value" id="profilePhone">-</div>
+
+      <div class="field-label">Department</div>
+      <div class="field-value" id="profileDept">-</div>
+
+      <div class="field-label">External ID</div>
+      <div class="field-value" id="profileExtId">-</div>
+
+    </div>
+
+    <button class="btn btn-secondary mt-3 w-100" onclick="goBack()">Back</button>
+
+  </div>
+
+  <script src="/assets/js/common.js"></script>
+
+  <script>
+    window.onload = function () {
+      var uid = localStorage.getItem("userId");
+
+      if (!uid) {
+        showToast("Please login first", false);
+        redirectTo("/user/login.html");
+        return;
+      }
+
+      loadProfile(uid);
+    };
+
+    function loadProfile(uid) {
+      apiFetch("/users/" + uid + "/profile", "GET")
+        .then(function (json) {
+
+          if (!json || !json.success) {
+            showToast("Unable to load profile", false);
+            return;
+          }
+
+          var u = json.data;
+
+          // Fill fields
+          document.getElementById("profileName").innerText = u.name || "-";
+          document.getElementById("profileEmail").innerText = u.email || "-";
+          document.getElementById("profileUsername").innerText = u.username || "-";
+          document.getElementById("profilePhone").innerText = u.phone || "-";
+          document.getElementById("profileDept").innerText = u.department || "-";
+          document.getElementById("profileExtId").innerText = u.externalId || "-";
+
+          // Avatar
+          var firstLetter = "-";
+          if (u.name && u.name.length > 0) {
+            firstLetter = u.name.charAt(0).toUpperCase();
+          }
+          document.getElementById("avatarLetter").innerText = firstLetter;
+
+          // Role badge
+          var role = document.getElementById("userRole");
+          if (u.guest === true) {
+            role.innerText = "Guest User";
+            role.style.background = "#fee2e2";
+            role.style.color = "#991b1b";
+          } else {
+            role.innerText = "Registered User";
+            role.style.background = "#fef9c3";
+            role.style.color = "#854d0e";
+          }
+
+        });
+    }
+
+    function goBack() {
+      redirectTo("/user/draws.html");
+    }
+  </script>
+
+</body>
+
+</html>
