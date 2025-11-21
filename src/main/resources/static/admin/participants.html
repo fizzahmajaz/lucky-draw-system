@@ -5,10 +5,9 @@
     <meta charset="UTF-8">
     <title>Participants</title>
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-
-    <!-- Central CSS -->
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="/assets/css/style.css">
 
     <style>
@@ -19,198 +18,405 @@
             position: fixed;
             top: 0;
             left: 0;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
             padding: 20px;
         }
-
         .sidebar-item {
             padding: 12px 15px;
             border-radius: 14px;
             cursor: pointer;
             margin-bottom: 6px;
         }
-
-        .sidebar-item:hover {
-            background: #f3f4f6;
-        }
-
-        .sidebar-active {
-            background: #e6f0ff;
-        }
+        .sidebar-item:hover { background: #f3f4f6; }
+        .sidebar-active { background: #fbe6ff; }
 
         .content {
             margin-left: 260px;
             padding: 30px;
+        }
+        .badge-guest {
+            background: #fff4db;
+            color: #8a5a00;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 3px 10px;
+            font-size: 12px;
+        }
+        .badge-access {
+            background: #e8f0ff;
+            color: #123c8c;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 3px 10px;
+            font-size: 12px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="toast-box" id="toast-box"></div>
+<div class="toast-box" id="toast-box"></div>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h4 class="mb-4">Admin Panel</h4>
+<!-- Sidebar -->
+<div class="sidebar">
+    <h4 class="mb-4">Admin Panel</h4>
 
-        <div class="sidebar-item" onclick="redirectTo('/admin/dashboard.html')">Dashboard</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/create-draw.html')">Create Draw</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/view-draws.html')">View Draws</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/create-voucher.html')">Create Voucher</div>
-        <div class="sidebar-item sidebar-active">Participants</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/winners.html')">Winners</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/login.html')">Logout</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/dashboard.html')">Dashboard</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/create-draw.html')">Create Draw</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/view-draws.html')">View Draws</div>
+    <div class="sidebar-item sidebar-active">Participants</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/winners.html')">Winners</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/login.html')">Logout</div>
+</div>
+
+<!-- Content -->
+<div class="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">Participants</h2>
+            <small class="text-muted" id="currentDrawLabel">Select a draw or view all participants</small>
+        </div>
+        <div class="text-muted" id="totalParticipantsLabel">Total: 0 participants</div>
     </div>
 
-    <!-- Content -->
-    <div class="content">
-        <h2 class="mb-4">Participants</h2>
+    <!-- Filters -->
+    <div class="card-apple mb-4">
+        <div class="row g-3">
 
-        <!-- Filters -->
-        <div class="card-apple mb-4">
-            <div class="row g-3">
-
-                <!-- Winner filter -->
-                <div class="col-md-3">
-                    <select id="filterWinner" class="form-control" onchange="loadParticipants()">
-                        <option value="">Winner (All)</option>
-                        <option value="true">Winner Only</option>
-                        <option value="false">Non-Winner</option>
-                    </select>
-                </div>
-
-                <!-- Guest / Registered filter -->
-                <div class="col-md-3">
-                    <select id="filterUserType" class="form-control" onchange="loadParticipants()">
-                        <option value="">User Type (All)</option>
-                        <option value="guest">Guest Only</option>
-                        <option value="registered">Registered Only</option>
-                    </select>
-                </div>
-
-                <!-- Department filter -->
-                <div class="col-md-2">
-                    <input id="filterDepartment" class="form-control" placeholder="Department" oninput="loadParticipants()">
-                </div>
-
-                <!-- Voucher filter -->
-                <div class="col-md-2">
-                    <input id="filterVoucher" class="form-control" placeholder="Voucher Code" oninput="loadParticipants()">
-                </div>
-
-                <!-- Export buttons -->
-                <div class="col-md-2 text-end">
-                    <button class="btn btn-dark me-2" onclick="exportCsv()">CSV</button>
-                    <button class="btn btn-danger" onclick="exportPdf()">PDF</button>
-                </div>
-
+            <!-- Draw dropdown -->
+            <div class="col-md-3">
+                <select id="drawSelect" class="form-control" onchange="onDrawChange()">
+                    <option value="">Select Draw</option>
+                    <!-- draws will be loaded here -->
+                </select>
             </div>
+
+            <!-- Search -->
+            <div class="col-md-4">
+                <input id="searchInput"
+                       class="form-control"
+                       placeholder="Search by name, email, username, phone, department"
+                       oninput="renderParticipants()">
+            </div>
+
+            <!-- Winner filter -->
+            <div class="col-md-3">
+                <select id="filterWinner" class="form-control" onchange="renderParticipants()">
+                    <option value="">All</option>
+                    <option value="true">Only Winners</option>
+                    <option value="false">Only Non-Winners</option>
+                </select>
+            </div>
+
+            <!-- User type filter -->
+            <div class="col-md-2">
+                <select id="filterUserType" class="form-control" onchange="renderParticipants()">
+                    <option value="">User Type (All)</option>
+                    <option value="guest">Guest Only</option>
+                    <option value="registered">Registered Only</option>
+                </select>
+            </div>
+
         </div>
 
-        <!-- Table -->
-        <div class="card-apple">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>User Type</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Department</th>
-                            <th>External ID</th>
-                            <th>Voucher Used</th>
-                            <th>Joined At</th>
-                            <th>Winner</th>
-                            <th>Info</th>
-                        </tr>
-                    </thead>
-                    <tbody id="participantsTbody"></tbody>
-                </table>
+        <div class="row g-3 mt-2">
+
+            <!-- Mode toggle -->
+            <div class="col-md-6">
+                <div class="btn-group" role="group">
+                    <button id="modeDrawBtn" type="button"
+                            class="btn btn-sm btn-primary"
+                            onclick="switchToDrawMode()">
+                        Selected Draw
+                    </button>
+                    <button id="modeAllBtn" type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            onclick="switchToAllMode()">
+                        All Participants
+                    </button>
+                </div>
+            </div>
+
+            <!-- Export buttons -->
+            <div class="col-md-6 text-end">
+                <button class="btn btn-dark me-2" onclick="exportCsv()">CSV</button>
+                <button class="btn btn-danger" onclick="exportPdf()">PDF</button>
             </div>
         </div>
-
     </div>
 
-    <script src="/assets/js/common.js"></script>
+    <!-- Table -->
+    <div class="card-apple">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                <tr>
+                    <th style="width: 60px;">No.</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Department</th>
+                    <th>Username</th>
+                    <th>Access</th>
+                    <th>Joined At</th>
+                    <th>Winner</th>
+                </tr>
+                </thead>
+                <tbody id="participantsTbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-    <script>
-        var drawId = new URLSearchParams(window.location.search).get("id");
+<script src="/assets/js/common.js"></script>
+<script>
+    let allParticipantsCache = [];
+    let allDrawsCache = [];
+    let currentMode = "draw"; // "draw" or "all"
 
-        window.onload = function () {
+    window.onload = function () {
+        loadDraws();
+        showSelectDrawMessage();
+    };
+
+    function setModeButtons() {
+        const drawBtn = document.getElementById("modeDrawBtn");
+        const allBtn = document.getElementById("modeAllBtn");
+
+        if (currentMode === "draw") {
+            drawBtn.classList.add("btn-primary");
+            drawBtn.classList.remove("btn-outline-secondary");
+            allBtn.classList.add("btn-outline-secondary");
+            allBtn.classList.remove("btn-primary");
+        } else {
+            allBtn.classList.add("btn-primary");
+            allBtn.classList.remove("btn-outline-secondary");
+            drawBtn.classList.add("btn-outline-secondary");
+            drawBtn.classList.remove("btn-primary");
+        }
+    }
+
+    function switchToDrawMode() {
+        currentMode = "draw";
+        setModeButtons();
+        onDrawChange();
+    }
+
+    function switchToAllMode() {
+        currentMode = "all";
+        setModeButtons();
+        loadAllParticipants();
+    }
+
+    function showSelectDrawMessage() {
+        const tbody = document.getElementById("participantsTbody");
+        tbody.innerHTML =
+            "<tr><td colspan='9' class='text-center text-muted'>Select a draw or click 'All Participants'</td></tr>";
+        document.getElementById("totalParticipantsLabel").innerText = "Total: 0 participants";
+        document.getElementById("currentDrawLabel").innerText = "Select a draw or view all participants";
+    }
+
+    // Load all draws for dropdown (from /draws)
+    function loadDraws() {
+        apiFetch("/draws?page=0&size=200", "GET")
+            .then(function (json) {
+                if (!json || !json.success) {
+                    console.log("Failed to load draws:", json);
+                    showToast("Failed to load draws", false);
+                    return;
+                }
+
+                const data = json.data || {};
+                allDrawsCache = data.content || [];
+
+                const select = document.getElementById("drawSelect");
+
+                // keep first option ("Select Draw"), remove others
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+
+                allDrawsCache.forEach(function (d) {
+                    const opt = document.createElement("option");
+                    opt.value = d.id;
+                    opt.textContent = d.name || ("Draw #" + d.id);
+                    select.appendChild(opt);
+                });
+            });
+    }
+
+    function onDrawChange() {
+        if (currentMode !== "draw") return;
+
+        const drawId = document.getElementById("drawSelect").value;
+        if (!drawId) {
+            allParticipantsCache = [];
+            showSelectDrawMessage();
+            return;
+        }
+
+        loadParticipantsForDraw(drawId);
+    }
+
+    function loadParticipantsForDraw(drawId) {
+        apiFetch("/admins/draws/" + drawId + "/participants", "GET")
+            .then(function (json) {
+                if (!json || !json.success) {
+                    showToast("Failed to load participants", false);
+                    console.log("Participants error:", json);
+                    return;
+                }
+
+                allParticipantsCache = json.data || [];
+
+                const totalLabel = document.getElementById("totalParticipantsLabel");
+                totalLabel.innerText = "Total: " + allParticipantsCache.length + " participants";
+
+                const currentDrawLabel = document.getElementById("currentDrawLabel");
+                const draw = allDrawsCache.find(d => String(d.id) === String(drawId));
+                currentDrawLabel.innerText = "Showing participants for: " + (draw ? draw.name : ("Draw #" + drawId));
+
+                renderParticipants();
+            });
+    }
+
+    function loadAllParticipants() {
+        apiFetch("/admins/participants/all", "GET")
+            .then(function (json) {
+                if (!json || !json.success) {
+                    showToast("Failed to load participants", false);
+                    console.log("Participants all error:", json);
+                    return;
+                }
+
+                allParticipantsCache = json.data || [];
+
+                document.getElementById("totalParticipantsLabel").innerText =
+                    "Total: " + allParticipantsCache.length + " participants";
+                document.getElementById("currentDrawLabel").innerText =
+                    "Showing: All participants (all draws)";
+
+                renderParticipants();
+            });
+    }
+
+    function renderParticipants() {
+        const tbody = document.getElementById("participantsTbody");
+        tbody.innerHTML = "";
+
+        const filterWinner = document.getElementById("filterWinner").value;
+        const filterUserType = document.getElementById("filterUserType").value;
+        const search = document.getElementById("searchInput").value.toLowerCase().trim();
+
+        let rowIndex = 0;
+
+        for (let i = 0; i < allParticipantsCache.length; i++) {
+            const p = allParticipantsCache[i];
+
+            // winner filter
+            if (filterWinner !== "" && String(p.winner) !== filterWinner) continue;
+
+            // user type filter
+            if (filterUserType === "guest" && p.guest !== true) continue;
+            if (filterUserType === "registered" && p.guest === true) continue;
+
+            // search filter: name, email, username, phone, department (voucher still searchable but not in placeholder)
+            const combined = (
+                (p.name || "") + " " +
+                (p.email || "") + " " +
+                (p.username || "") + " " +
+                (p.phone || "") + " " +
+                (p.department || "") + " " +
+                (p.voucherUsed || "")
+            ).toLowerCase();
+
+            if (search && combined.indexOf(search) === -1) continue;
+
+            rowIndex++;
+
+            // access display (guest / voucher / -)
+            let accessHtml;
+            if (p.guest === true) {
+                accessHtml = "<span class='badge-guest'>Guest</span>";
+            } else if (p.voucherUsed) {
+                accessHtml = "<span class='badge-access'>" + escapeHtml(p.voucherUsed) + "</span>";
+            } else {
+                accessHtml = "-";
+            }
+
+            const joinedAtText = formatDate(p.joinedAt);
+
+            const tr = document.createElement("tr");
+            tr.innerHTML =
+                "<td>" + rowIndex + "</td>" +
+                "<td>" + escapeHtml(p.name || "-") + "</td>" +
+                "<td>" + escapeHtml(p.email || "-") + "</td>" +
+                "<td>" + escapeHtml(p.phone || "-") + "</td>" +
+                "<td>" + escapeHtml(p.department || "-") + "</td>" +
+                "<td>" + escapeHtml(p.username || "-") + "</td>" +
+                "<td>" + accessHtml + "</td>" +
+                "<td>" + joinedAtText + "</td>" +
+                "<td>" + (p.winner ? "Yes" : "No") + "</td>";
+
+            tbody.appendChild(tr);
+        }
+
+        if (rowIndex === 0) {
+            const emptyTr = document.createElement("tr");
+            emptyTr.innerHTML =
+                "<td colspan='9' class='text-muted text-center'>No participants found</td>";
+            tbody.appendChild(emptyTr);
+        }
+    }
+
+    function formatDate(isoString) {
+        if (!isoString) return "-";
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return isoString; // fallback if backend sends different format
+
+        const day = d.getDate();
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const month = monthNames[d.getMonth()];
+        const year = d.getFullYear();
+
+        return day + " " + month + ", " + year;
+    }
+
+    function exportCsv() {
+        if (currentMode === "all") {
+            redirectTo("/admins/participants/export?format=csv");
+        } else {
+            const drawId = document.getElementById("drawSelect").value;
             if (!drawId) {
-                showToast("No draw selected", false);
+                showToast("Select a draw first", false);
                 return;
             }
-            loadParticipants();
-        };
-
-        function loadParticipants() {
-
-            apiFetch("/draws/" + drawId + "/participants?page=0&size=200", "GET")
-                .then(function (json) {
-
-                    if (!json || !json.success) {
-                        showToast("Failed to load participants", false);
-                        return;
-                    }
-
-                    var list = json.data.content;
-                    var tbody = document.getElementById("participantsTbody");
-                    tbody.innerHTML = "";
-
-                    var filterWinner = document.getElementById("filterWinner").value;
-                    var filterUserType = document.getElementById("filterUserType").value;
-                    var filterDept = document.getElementById("filterDepartment").value.toLowerCase();
-                    var filterVoucher = document.getElementById("filterVoucher").value.toLowerCase();
-
-                    for (var i = 0; i < list.length; i++) {
-                        var p = list[i];
-
-                        // User type filter
-                        if (filterUserType === "guest" && p.guest !== true) continue;
-                        if (filterUserType === "registered" && p.guest === true) continue;
-
-                        // Winner filter
-                        if (filterWinner !== "" && String(p.winner) !== filterWinner) continue;
-
-                        // Department filter
-                        if (filterDept && (!p.department || p.department.toLowerCase().indexOf(filterDept) === -1)) continue;
-
-                        // Voucher filter
-                        if (filterVoucher && (!p.voucherUsed || p.voucherUsed.toLowerCase().indexOf(filterVoucher) === -1)) continue;
-
-                        var tr = document.createElement("tr");
-
-                        tr.innerHTML =
-                            "<td>" + p.name + "</td>" +
-                            "<td>" + (p.guest ? "<span class='badge bg-warning text-dark'>Guest</span>" : "Registered") + "</td>" +
-                            "<td>" + (p.email || "-") + "</td>" +
-                            "<td>" + (p.phone || "-") + "</td>" +
-                            "<td>" + (p.department || "-") + "</td>" +
-                            "<td>" + (p.externalId || "-") + "</td>" +
-                            "<td>" + (p.voucherUsed || "-") + "</td>" +
-                            "<td>" + (p.joinedAt || "-") + "</td>" +
-                            "<td>" + (p.winner ? "Yes" : "No") + "</td>" +
-                            "<td>" +
-                            "<button class='btn btn-sm btn-info' onclick='showParticipantDetail(" + p.id + ")'>Info</button>" +
-                            "</td>";
-
-                        tbody.appendChild(tr);
-                    }
-
-                });
-        }
-
-        function exportCsv() {
             redirectTo("/admins/draws/" + drawId + "/participants/export?format=csv");
         }
+    }
 
-        function exportPdf() {
+    function exportPdf() {
+        if (currentMode === "all") {
+            redirectTo("/admins/participants/export?format=pdf");
+        } else {
+            const drawId = document.getElementById("drawSelect").value;
+            if (!drawId) {
+                showToast("Select a draw first", false);
+                return;
+            }
             redirectTo("/admins/draws/" + drawId + "/participants/export?format=pdf");
         }
-    </script>
+    }
+
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return "";
+        return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+</script>
 
 </body>
-
 </html>

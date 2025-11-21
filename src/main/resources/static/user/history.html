@@ -3,260 +3,420 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Draw History</title>
+    <title>History</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="/assets/css/style.css">
 
     <style>
-        body { background: #f1f5f9; }
+        body { background: linear-gradient(135deg, #fdf2f8, #eff6ff); min-height: 100vh; }
+        .user-shell { display: flex; min-height: 100vh; }
 
-        .sidebar {
-            width: 240px;
-            background: white;
-            height: 100vh;
-            position: fixed;
-            left: 0; top: 0;
-            padding: 20px;
-            box-shadow: 0 6px 20px rgba(0,0,0,.08);
+        /* SIDEBAR */
+        .user-sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2563eb, #22c1c3);
+            color: white; padding: 22px 18px;
+            display: flex; flex-direction: column;
         }
 
-        .sidebar-item {
-            padding: 12px 16px;
-            border-radius: 14px;
-            margin-bottom: 6px;
-            cursor: pointer;
+        .user-logo {
+            display: flex; align-items: center;
+            gap: 10px; margin-bottom: 30px;
         }
-        .sidebar-item:hover { background: #f3f4f6; }
-        .sidebar-active { background: #e6f0ff; }
 
-        .content {
-            margin-left: 260px;
-            padding: 30px;
+        .user-logo-icon {
+            width: 36px; height: 36px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.2);
+            display:flex; align-items:center; justify-content:center;
+        }
+
+        .user-nav { flex: 1; }
+        .user-nav-item {
+            padding: 10px 12px; border-radius: 12px;
+            display: flex; align-items:center;
+            gap: 10px; margin-bottom: 6px;
+            cursor: pointer; font-size: 15px;
+        }
+        .user-nav-item:hover { background: rgba(255,255,255,0.12); }
+        .user-nav-active { background: rgba(255,255,255,0.2); }
+
+        /* MAIN */
+        .user-main { flex: 1; padding: 22px 26px; }
+
+        .page-title-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-end; margin-bottom: 18px;
+        }
+        .subtitle { color: #64748b; font-size: 13px; }
+
+        .filter-pill {
+            border-radius: 999px; padding: 6px 14px;
+            background: white; font-size: 13px;
+            border: 1px solid #e5e7eb;
+            cursor: pointer; margin-right: 6px;
+        }
+        .filter-pill-active {
+            background: #1d4ed8; color: white;
+            border-color: #1d4ed8;
+        }
+
+        .toggle-btn {
+            border-radius: 999px; padding: 6px 15px;
         }
 
         .history-card {
-            background: white;
-            padding: 20px;
-            border-radius: 18px;
-            box-shadow: 0 5px 18px rgba(0,0,0,.08);
-            cursor: pointer;
-            transition: .2s;
+            background: white; border-radius: 20px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+            padding: 18px 20px; margin-bottom: 14px;
         }
-        .history-card:hover { transform: translateY(-3px); }
+        .history-card:hover { transform: translateY(-3px); transition: .2s; }
 
-        .won { border-left: 6px solid #16a34a; background: #ecfdf5; }
-        .lost { border-left: 6px solid #dc2626; background: #fef2f2; }
-        .ended { border-left: 6px solid #6b7280; opacity: 0.7; }
-        .running { border-left: 6px solid #3b82f6; }
+        .badge-won {
+            background: #dcfce7; color:#166534;
+            border-radius: 999px; padding: 4px 10px;
+            font-size: 11px; font-weight: 600;
+        }
+        .badge-lost {
+            background: #fee2e2; color:#991b1b;
+            border-radius: 999px; padding:4px 10px;
+            font-size: 11px; font-weight:600;
+        }
 
-        /* Modal */
-        .modal-content {
-            border-radius: 16px;
-            padding: 10px;
+        .empty-box {
+            background: #f8fafc; padding: 28px;
+            border-radius: 20px; text-align:center;
+            color: #6b7280;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h4 class="mb-4">User Panel</h4>
+<div class="toast-box" id="toast-box"></div>
 
-        <div class="sidebar-item" onclick="redirectTo('/user/dashboard.html')">Dashboard</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/draws.html')">Available Draws</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/joined.html')">Joined Draws</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/winners.html')">Winners</div>
-        <div class="sidebar-item sidebar-active">History</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/profile.html')">Profile</div>
-        <div class="sidebar-item" onclick="logoutUser()">Logout</div>
-    </div>
+<div class="user-shell">
 
-    <!-- Main Content -->
-    <div class="content">
-
-        <h2 class="mb-4">Draw History</h2>
-
-        <!-- Filters + Export -->
-        <div class="card-apple p-3 mb-4">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <select class="form-control" id="filterHistory" onchange="applyFilters()">
-                        <option value="">All Draws</option>
-                        <option value="WON">Won</option>
-                        <option value="LOST">Lost</option>
-                        <option value="RUNNING">Running</option>
-                        <option value="ENDED">Ended</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3 text-end">
-                    <button class="btn btn-dark" onclick="exportCsv()">CSV</button>
-                </div>
-
-                <div class="col-md-3 text-end">
-                    <button class="btn btn-danger" onclick="exportPdf()">PDF</button>
-                </div>
-            </div>
+    <!-- SIDEBAR -->
+    <div class="user-sidebar">
+        <div class="user-logo">
+            <div class="user-logo-icon">🕑</div>
+            <div>User Panel</div>
         </div>
 
-        <!-- Draw Cards -->
-        <div id="historyBox" class="row g-3"></div>
-
-    </div>
-
-    <!-- MODAL FOR DRAW DETAILS -->
-    <div class="modal fade" id="detailsModal">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-
-                <div class="modal-header">
-                    <h5 id="modalTitle"></h5>
-                    <button class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body" id="modalBody">
-                    Loading...
-                </div>
-
+        <div class="user-nav">
+            <div class="user-nav-item" onclick="redirectTo('/user/dashboard.html')">
+                <span>🏠</span> Dashboard
+            </div>
+            <div class="user-nav-item" onclick="redirectTo('/user/draws.html')">
+                <span>🎟</span> Available Draws
+            </div>
+            <div class="user-nav-item" onclick="redirectTo('/user/joined.html')">
+                <span>📌</span> Joined Draws
+            </div>
+            <div class="user-nav-item" onclick="redirectTo('/user/winners.html')">
+                <span>🏆</span> My Wins
+            </div>
+            <div class="user-nav-item user-nav-active">
+                <span>🕑</span> History
+            </div>
+            <div class="user-nav-item" onclick="redirectTo('/user/profile.html')">
+                <span>👤</span> Profile
+            </div>
+            <div class="user-nav-item" onclick="logoutUser()">
+                <span>🚪</span> Logout
             </div>
         </div>
     </div>
 
-    <script src="/assets/js/common.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- MAIN -->
+    <div class="user-main">
 
-    <script>
-        var userId = localStorage.getItem("userId");
-        if (!userId) redirectTo('/user/login.html');
+        <div class="page-title-row">
+            <div>
+                <h3>History</h3>
+                <div class="subtitle">All your joined, won, and lost draws.</div>
+            </div>
 
-        var allHistory = [];
+            <div>
+                <button class="btn btn-sm btn-outline-secondary me-2" onclick="exportHistory('csv')">CSV</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportHistory('pdf')">PDF</button>
+            </div>
+        </div>
 
-        window.onload = function () {
-            loadHistory();
-        };
+        <!-- FILTERS -->
+        <div class="mb-3 d-flex align-items-center">
+            <div id="f_all" class="filter-pill filter-pill-active" onclick="setFilter('all')">All</div>
+            <div id="f_won" class="filter-pill" onclick="setFilter('won')">Won</div>
+            <div id="f_lost" class="filter-pill" onclick="setFilter('lost')">Lost</div>
+            <div id="f_active" class="filter-pill" onclick="setFilter('active')">Active</div>
+            <div id="f_ended" class="filter-pill" onclick="setFilter('ended')">Ended</div>
+        </div>
 
-        function loadHistory() {
-            apiFetch("/users/" + userId + "/draws/joined", "GET")
-                .then(function (json) {
+        <!-- VIEW TOGGLE -->
+        <div class="mb-3 text-end">
+            <button class="btn btn-sm btn-outline-dark toggle-btn" onclick="toggleView('table')">Table</button>
+            <button class="btn btn-sm btn-outline-dark toggle-btn" onclick="toggleView('card')">Cards</button>
+        </div>
 
-                    if (!json || !json.success) return;
+        <!-- HISTORY CONTENT -->
+        <div id="historyContainer"></div>
 
-                    allHistory = json.data;
-                    renderHistory(allHistory);
-                });
+    </div>
+</div>
+
+
+<!-- MODAL -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius:18px;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Details</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody">Loading...</div>
+        </div>
+    </div>
+</div>
+
+
+<script src="/assets/js/common.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+var userId = null;
+var filter = "all";
+var viewMode = "card";
+var historyList = [];
+
+window.onload = function () {
+
+    try { userId = localStorage.getItem("userId"); } catch(e) {}
+
+    if (!userId) { redirectTo('/user/login.html'); return; }
+
+    loadHistory();
+};
+
+function loadHistory() {
+    apiFetch("/users/" + userId + "/draws/joined", "GET")
+      .then(function(res) {
+
+        if (!res || !res.success || !res.data) {
+            showToast("Unable to load history", false);
+            return;
         }
 
-        function renderHistory(list) {
-            var box = document.getElementById("historyBox");
-            box.innerHTML = "";
+        historyList = res.data;
+        renderHistory();
+      });
+}
 
-            for (var i = 0; i < list.length; i++) {
-                var d = list[i];
+function renderHistory() {
+    var box = document.getElementById("historyContainer");
+    box.innerHTML = "";
 
-                var className = "history-card ";
-                if (d.userWon) className += "won";
-                else if (d.status === "ENDED") className += "lost";
-                else if (d.status === "RUNNING") className += "running";
-                else className += "ended";
+    if (!historyList || historyList.length === 0) {
+        box.innerHTML = "<div class='empty-box'>No draw history found.</div>";
+        return;
+    }
 
-                var statusBadge = d.userWon ?
-                    "<span class='badge bg-success'>Won</span>" :
-                    d.status === "RUNNING" ?
-                        "<span class='badge bg-primary'>Running</span>" :
-                        d.status === "ENDED" ?
-                            "<span class='badge bg-secondary'>Ended</span>" :
-                            "<span class='badge bg-danger'>Lost</span>";
+    var f = filter;
 
-                var card =
-                    "<div class='col-md-4'>" +
-                    " <div class='" + className + "' onclick='openDetails(" + d.id + ")'>" +
-                    "   <h5>" + d.name + "</h5>" +
-                    "   " + statusBadge + "<br>" +
-                    "   <small>Joined: " + d.joinedAt + "</small><br>" +
-                    "   <small>Ends: " + (d.endDate || '-') + "</small>" +
-                    " </div>" +
-                    "</div>";
+    var filtered = [];
+    var i;
 
-                box.innerHTML += card;
-            }
+    for (i = 0; i < historyList.length; i++) {
+        var h = historyList[i];
+        if (!h) continue;
+
+        var isWinner = (h.winner === true);
+        var ended = true;
+
+        if (h.endDate) {
+            var dt = new Date(h.endDate).getTime();
+            ended = dt < Date.now();
         }
 
-        function applyFilters() {
-            var f = document.getElementById("filterHistory").value;
-            var filtered = [];
+        if (f === "won" && !isWinner) continue;
+        if (f === "lost" && isWinner) continue;
+        if (f === "active" && ended) continue;
+        if (f === "ended" && !ended) continue;
 
-            for (var i = 0; i < allHistory.length; i++) {
-                var d = allHistory[i];
+        filtered.push(h);
+    }
 
-                if (f === "") filtered.push(d);
-                else if (f === "WON" && d.userWon) filtered.push(d);
-                else if (f === "LOST" && !d.userWon && d.status === "ENDED") filtered.push(d);
-                else if (f === "RUNNING" && d.status === "RUNNING") filtered.push(d);
-                else if (f === "ENDED" && d.status === "ENDED") filtered.push(d);
-            }
+    if (filtered.length === 0) {
+        box.innerHTML = "<div class='empty-box'>No results match your filter.</div>";
+        return;
+    }
 
-            renderHistory(filtered);
-        }
+    if (viewMode === "table") {
+        renderTable(filtered);
+    } else {
+        renderCards(filtered);
+    }
+}
 
-        function openDetails(drawId) {
-            // Get draw full details
-            apiFetch("/draws/" + drawId, "GET")
-                .then(function (json) {
+function renderTable(list) {
+    var box = document.getElementById("historyContainer");
 
-                    if (!json || !json.success) return;
+    var html = "<div class='table-responsive'>" +
+        "<table class='table table-hover'>" +
+        "<thead><tr>" +
+        "<th>Draw</th>" +
+        "<th>Prize</th>" +
+        "<th>Status</th>" +
+        "<th>Joined</th>" +
+        "<th>Details</th>" +
+        "</tr></thead><tbody>";
 
-                    var d = json.data;
+    var i;
+    for (i = 0; i < list.length; i++) {
+        var h = list[i];
+        var nm = h.drawName || "Draw";
 
-                    document.getElementById("modalTitle").innerText = d.name;
+        var prize = h.prizeType || "-";
+        if (h.prizeAmount) prize += " • " + h.prizeAmount;
 
-                    var html =
-                        "<b>Prize Type:</b> " + d.prizeType + "<br>" +
-                        "<b>Prize Amount:</b> " + (d.prizeAmount || '-') + "<br>" +
-                        "<b>Voucher:</b> " + (d.voucherCode || '-') + "<br>" +
-                        "<b>Description:</b> " + (d.description || '-') + "<br>" +
-                        "<b>Department:</b> " + (d.department || '-') + "<br>" +
-                        "<b>Start:</b> " + d.startDate + "<br>" +
-                        "<b>End:</b> " + d.endDate + "<br><hr>" +
-                        "<h6>Winners:</h6>";
+        var badge = h.winner
+            ? "<span class='badge-won'>WINNER</span>"
+            : "<span class='badge-lost'>Lost</span>";
 
-                    apiFetch("/draws/" + drawId + "/winners", "GET")
-                        .then(function (json2) {
+        var joinedAt = h.joinedAt ? formatDateTime(h.joinedAt) : "-";
 
-                            if (!json2 || !json2.success) return;
+        html += "<tr>" +
+            "<td>" + escapeHtml(nm) + "</td>" +
+            "<td>" + escapeHtml(prize) + "</td>" +
+            "<td>" + badge + "</td>" +
+            "<td>" + joinedAt + "</td>" +
+            "<td><button class='btn btn-sm btn-outline-dark' onclick='openDetail(" + h.drawId + ")'>View</button></td>" +
+            "</tr>";
+    }
 
-                            var winners = json2.data.content;
+    html += "</tbody></table></div>";
 
-                            for (var i = 0; i < winners.length; i++) {
-                                var w = winners[i];
-                                var highlight = w.userId == userId ? "style='color:green;font-weight:bold;'" : "";
+    box.innerHTML = html;
+}
 
-                                html += "<div " + highlight + ">" + w.userName + " (" + (w.email || '-') + ")</div>";
-                            }
+function renderCards(list) {
+    var box = document.getElementById("historyContainer");
 
-                            document.getElementById("modalBody").innerHTML = html;
-                            var modal = new bootstrap.Modal(document.getElementById('detailsModal'));
-                            modal.show();
-                        });
-                });
-        }
+    var i;
+    for (i = 0; i < list.length; i++) {
+        var h = list[i];
 
-        function exportCsv() {
-            redirectTo("/users/" + userId + "/draws/history/export?format=csv");
-        }
+        var nm = h.drawName || "Draw";
 
-        function exportPdf() {
-            redirectTo("/users/" + userId + "/draws/history/export?format=pdf");
-        }
+        var prize = h.prizeType || "-";
+        if (h.prizeAmount) prize += " • " + h.prizeAmount;
 
-        function redirectTo(a) { window.location.href = a; }
-        function logoutUser() {
-            localStorage.removeItem("userId");
-            redirectTo("/user/login.html");
-        }
-    </script>
+        var badge = h.winner
+            ? "<span class='badge-won'>WINNER</span>"
+            : "<span class='badge-lost'>Lost</span>";
+
+        var joinedAt = h.joinedAt ? formatDateTime(h.joinedAt) : "-";
+
+        var card = document.createElement("div");
+        card.className = "history-card";
+
+        card.innerHTML =
+            "<div class='d-flex justify-content-between'>" +
+            "<div>" +
+            "<h5>" + escapeHtml(nm) + "</h5>" +
+            "<div class='text-muted'><b>Prize:</b> " + escapeHtml(prize) + "</div>" +
+            "<div class='text-muted'><b>Joined:</b> " + joinedAt + "</div>" +
+            "</div>" +
+            "<div class='text-end'>" +
+            badge +
+            "<br><br>" +
+            "<button class='btn btn-sm btn-outline-dark' onclick='openDetail(" + h.drawId + ")'>Details</button>" +
+            "</div>" +
+            "</div>";
+
+        box.appendChild(card);
+    }
+}
+
+function openDetail(drawId) {
+    apiFetch("/draws/" + drawId, "GET")
+        .then(function(json) {
+            if (!json || !json.success || !json.data) return;
+
+            var d = json.data;
+            document.getElementById("modalTitle").innerText = d.name;
+
+            var html =
+                "<b>Prize Type:</b> " + escapeHtml(d.prizeType) + "<br>" +
+                "<b>Prize Amount:</b> " + escapeHtml(d.prizeAmount) + "<br><br>" +
+                "<b>Description:</b><br>" + escapeHtml(d.description) + "<br><br>" +
+                "<b>Start:</b> " + formatDateTime(d.startDate) + "<br>" +
+                "<b>End:</b> " + formatDateTime(d.endDate);
+
+            document.getElementById("modalBody").innerHTML = html;
+
+            var m = new bootstrap.Modal(document.getElementById("historyModal"));
+            m.show();
+        });
+}
+
+function setFilter(f) {
+    filter = f;
+
+    var ids = ["f_all","f_won","f_lost","f_active","f_ended"];
+    var i;
+    for (i = 0; i < ids.length; i++) {
+        document.getElementById(ids[i]).classList.remove("filter-pill-active");
+    }
+    document.getElementById("f_" + f).classList.add("filter-pill-active");
+
+    renderHistory();
+}
+
+function toggleView(v) {
+    viewMode = v;
+    renderHistory();
+}
+
+function exportHistory(fmt) {
+    redirectTo("/users/" + userId + "/draws/history/export?format=" + fmt);
+}
+
+function formatDateTime(iso) {
+    if (!iso) return "-";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+
+    var day = d.getDate(); if (day < 10) day = "0"+day;
+    var mn = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+    var year = d.getFullYear();
+    var h = d.getHours();
+    var m = d.getMinutes();
+    var am = h >= 12 ? "PM":"AM";
+    h = h%12; if (h===0) h=12;
+    if (m<10) m="0"+m;
+
+    return day+" "+mn+" "+year+", "+h+":"+m+" "+am;
+}
+
+function escapeHtml(s){
+    if (!s) return "";
+    return String(s)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;");
+}
+
+function logoutUser(){
+    localStorage.clear();
+    redirectTo('/user/login.html');
+}
+
+function redirectTo(url){ window.location.href = url; }
+
+</script>
 
 </body>
-
 </html>

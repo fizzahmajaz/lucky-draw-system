@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -100,4 +101,10 @@ public User createGuest(UserGuestRequest req) {
 
     return userRepository.save(guest);
 }
+
+@Override
+public List<User> findAllUsers() {
+    return userRepository.findAll();
+}
+
 }

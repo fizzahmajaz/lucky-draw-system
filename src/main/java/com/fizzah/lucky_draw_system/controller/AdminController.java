@@ -142,7 +142,7 @@ public class AdminController {
                     .phone(u.getPhone())
                     .department(u.getDepartment())
                     .externalId(u.getExternalId())
-                    .voucherUsed(pd.getVoucherUsed() != null ? pd.getVoucherUsed().getCode() : null)
+                    .voucherUsed(pd.getVoucherUsed())
                     .joinedAt(pd.getJoinedAt())
                     .winner(pd.isWinner())
                     .redeemed(pd.isRedeemed())
@@ -176,12 +176,44 @@ public ApiResponse<?> getAllParticipants() {
                 .guest(u.isGuest())
                 .drawId(pd.getDraw().getId())
                 .drawName(pd.getDraw().getName())
-                .voucherUsed(pd.getVoucherUsed() != null ? pd.getVoucherUsed().getCode() : null)
+
+                // 🟢 FIX — voucherUsed is now a STRING
+                .voucherUsed(pd.getVoucherUsed())
+
                 .joinedAt(pd.getJoinedAt())
                 .winner(pd.isWinner())
                 .redeemed(pd.isRedeemed())
                 .build();
 
+    }).toList();
+
+    return ApiResponse.success(resp);
+}
+
+// GET participants for a specific draw
+@GetMapping("/draws/{id}/participants")
+public ApiResponse<?> getParticipantsByDraw(
+        @PathVariable Long id) {
+
+    List<ParticipantDraw> list = participantDrawRepository.findByDrawId(id);
+
+    List<ParticipantResponse> resp = list.stream().map(pd -> {
+        User u = pd.getUser();
+
+        return ParticipantResponse.builder()
+                .id(pd.getId())
+                .userId(u.getId())
+                .name(u.getName())
+                .email(u.getEmail())
+                .phone(u.getPhone())
+                .department(u.getDepartment())
+                .externalId(u.getExternalId())
+                .guest(u.isGuest())
+                .voucherUsed(pd.getVoucherUsed())     // string now
+                .joinedAt(pd.getJoinedAt())
+                .winner(pd.isWinner())
+                .redeemed(pd.isRedeemed())
+                .build();
     }).toList();
 
     return ApiResponse.success(resp);

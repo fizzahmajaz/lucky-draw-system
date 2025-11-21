@@ -29,7 +29,8 @@ public class ExportServiceImpl implements ExportService {
             r.put("Phone", u.getPhone() == null ? "" : u.getPhone());
             r.put("Department", u.getDepartment() == null ? "" : u.getDepartment());
             r.put("ExternalId", u.getExternalId() == null ? "" : u.getExternalId());
-            r.put("VoucherUsed", pd.getVoucherUsed() != null ? pd.getVoucherUsed().getCode() : "");
+            r.put("VoucherUsed", pd.getVoucherUsed() != null ? pd.getVoucherUsed() : "");
+
             r.put("JoinedAt", pd.getJoinedAt() == null ? "" : pd.getJoinedAt().toString());
             r.put("IsWinner", String.valueOf(pd.isWinner()));
             r.put("Redeemed", String.valueOf(pd.isRedeemed()));
@@ -59,64 +60,73 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public byte[] exportParticipantsCsv(Long drawId) {
         List<ParticipantDraw> pds = participantDrawRepository.findByDrawId(drawId);
-        List<String> headers = Arrays.asList("ParticipantId","Name","Email","Phone","Department","ExternalId","VoucherUsed","JoinedAt","IsWinner","Redeemed");
-        List<Map<String,String>> rows = buildParticipantRows(pds);
+        List<String> headers = Arrays.asList("ParticipantId", "Name", "Email", "Phone", "Department", "ExternalId",
+                "VoucherUsed", "JoinedAt", "IsWinner", "Redeemed");
+        List<Map<String, String>> rows = buildParticipantRows(pds);
         return CsvGenerator.generateCsv(headers, rows);
     }
 
     @Override
     public byte[] exportParticipantsPdf(Long drawId) {
         List<ParticipantDraw> pds = participantDrawRepository.findByDrawId(drawId);
-        List<String> headers = Arrays.asList("ParticipantId","Name","Email","Phone","Department","ExternalId","VoucherUsed","JoinedAt","IsWinner","Redeemed");
-        List<Map<String,String>> rows = buildParticipantRows(pds);
+        List<String> headers = Arrays.asList("ParticipantId", "Name", "Email", "Phone", "Department", "ExternalId",
+                "VoucherUsed", "JoinedAt", "IsWinner", "Redeemed");
+        List<Map<String, String>> rows = buildParticipantRows(pds);
         return PdfGenerator.generateTablePdf("Participants for Draw " + drawId, headers, rows);
     }
 
     @Override
     public byte[] exportAllParticipantsCsv() {
         List<ParticipantDraw> pds = participantDrawRepository.findAll();
-        List<String> headers = Arrays.asList("ParticipantId","Name","Email","Phone","Department","ExternalId","VoucherUsed","JoinedAt","IsWinner","Redeemed");
-        List<Map<String,String>> rows = buildParticipantRows(pds);
+        List<String> headers = Arrays.asList("ParticipantId", "Name", "Email", "Phone", "Department", "ExternalId",
+                "VoucherUsed", "JoinedAt", "IsWinner", "Redeemed");
+        List<Map<String, String>> rows = buildParticipantRows(pds);
         return CsvGenerator.generateCsv(headers, rows);
     }
 
     @Override
     public byte[] exportAllParticipantsPdf() {
         List<ParticipantDraw> pds = participantDrawRepository.findAll();
-        List<String> headers = Arrays.asList("ParticipantId","Name","Email","Phone","Department","ExternalId","VoucherUsed","JoinedAt","IsWinner","Redeemed");
-        List<Map<String,String>> rows = buildParticipantRows(pds);
+        List<String> headers = Arrays.asList("ParticipantId", "Name", "Email", "Phone", "Department", "ExternalId",
+                "VoucherUsed", "JoinedAt", "IsWinner", "Redeemed");
+        List<Map<String, String>> rows = buildParticipantRows(pds);
         return PdfGenerator.generateTablePdf("All Participants", headers, rows);
     }
 
     @Override
     public byte[] exportWinnersCsv(Long drawId) {
         List<WinnerHistory> whs = winnerHistoryRepository.findByDrawId(drawId);
-        List<String> headers = Arrays.asList("WinnerHistoryId","UserId","Name","Email","DrawId","DrawName","PrizeAmount","VoucherCode","AnnouncedAt","Redeemed");
-        List<Map<String,String>> rows = buildWinnerRows(whs);
+        List<String> headers = Arrays.asList("WinnerHistoryId", "UserId", "Name", "Email", "DrawId", "DrawName",
+                "PrizeAmount", "VoucherCode", "AnnouncedAt", "Redeemed");
+        List<Map<String, String>> rows = buildWinnerRows(whs);
         return CsvGenerator.generateCsv(headers, rows);
     }
 
     @Override
     public byte[] exportWinnersPdf(Long drawId) {
         List<WinnerHistory> whs = winnerHistoryRepository.findByDrawId(drawId);
-        List<String> headers = Arrays.asList("WinnerHistoryId","UserId","Name","Email","DrawId","DrawName","PrizeAmount","VoucherCode","AnnouncedAt","Redeemed");
-        List<Map<String,String>> rows = buildWinnerRows(whs);
+        List<String> headers = Arrays.asList("WinnerHistoryId", "UserId", "Name", "Email", "DrawId", "DrawName",
+                "PrizeAmount", "VoucherCode", "AnnouncedAt", "Redeemed");
+        List<Map<String, String>> rows = buildWinnerRows(whs);
         return PdfGenerator.generateTablePdf("Winners for Draw " + drawId, headers, rows);
     }
 
     @Override
     public byte[] exportUserHistoryCsv(Long userId) {
-        List<ParticipantDraw> pds = participantDrawRepository.findByUserId(userId, org.springframework.data.domain.Pageable.unpaged()).getContent();
-        List<String> headers = Arrays.asList("ParticipantId","DrawId","DrawName","JoinedAt","IsWinner","Redeemed","VoucherUsed");
-        List<Map<String,String>> rows = pds.stream().map(pd -> {
-            Map<String,String> r = new LinkedHashMap<>();
+        List<ParticipantDraw> pds = participantDrawRepository
+                .findByUserId(userId, org.springframework.data.domain.Pageable.unpaged()).getContent();
+        List<String> headers = Arrays.asList("ParticipantId", "DrawId", "DrawName", "JoinedAt", "IsWinner", "Redeemed",
+                "VoucherUsed");
+        List<Map<String, String>> rows = pds.stream().map(pd -> {
+            Map<String, String> r = new LinkedHashMap<>();
             r.put("ParticipantId", String.valueOf(pd.getId()));
             r.put("DrawId", String.valueOf(pd.getDraw().getId()));
             r.put("DrawName", pd.getDraw().getName());
             r.put("JoinedAt", pd.getJoinedAt() == null ? "" : pd.getJoinedAt().toString());
             r.put("IsWinner", String.valueOf(pd.isWinner()));
             r.put("Redeemed", String.valueOf(pd.isRedeemed()));
-            r.put("VoucherUsed", pd.getVoucherUsed() != null ? pd.getVoucherUsed().getCode() : "");
+            r.put("VoucherUsed", pd.getVoucherUsed() != null ? pd.getVoucherUsed() : "");
+
             return r;
         }).collect(Collectors.toList());
         return CsvGenerator.generateCsv(headers, rows);
@@ -124,17 +134,20 @@ public class ExportServiceImpl implements ExportService {
 
     @Override
     public byte[] exportUserHistoryPdf(Long userId) {
-        List<ParticipantDraw> pds = participantDrawRepository.findByUserId(userId, org.springframework.data.domain.Pageable.unpaged()).getContent();
-        List<String> headers = Arrays.asList("ParticipantId","DrawId","DrawName","JoinedAt","IsWinner","Redeemed","VoucherUsed");
-        List<Map<String,String>> rows = pds.stream().map(pd -> {
-            Map<String,String> r = new LinkedHashMap<>();
+        List<ParticipantDraw> pds = participantDrawRepository
+                .findByUserId(userId, org.springframework.data.domain.Pageable.unpaged()).getContent();
+        List<String> headers = Arrays.asList("ParticipantId", "DrawId", "DrawName", "JoinedAt", "IsWinner", "Redeemed",
+                "VoucherUsed");
+        List<Map<String, String>> rows = pds.stream().map(pd -> {
+            Map<String, String> r = new LinkedHashMap<>();
             r.put("ParticipantId", String.valueOf(pd.getId()));
             r.put("DrawId", String.valueOf(pd.getDraw().getId()));
             r.put("DrawName", pd.getDraw().getName());
             r.put("JoinedAt", pd.getJoinedAt() == null ? "" : pd.getJoinedAt().toString());
             r.put("IsWinner", String.valueOf(pd.isWinner()));
             r.put("Redeemed", String.valueOf(pd.isRedeemed()));
-            r.put("VoucherUsed", pd.getVoucherUsed() != null ? pd.getVoucherUsed().getCode() : "");
+            r.put("VoucherUsed", pd.getVoucherUsed() != null ? pd.getVoucherUsed() : "");
+
             return r;
         }).collect(Collectors.toList());
         return PdfGenerator.generateTablePdf("User Draw History - User " + userId, headers, rows);

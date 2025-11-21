@@ -5,37 +5,30 @@
   <title>Admin Dashboard</title>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/src/main/resources/static/assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
 
   <style>
-    body { background: #fbfbfd; }
+    
     .sidebar {
-            width: 240px;
-            background: white;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-            padding: 20px;
-        }
-        
-        .sidebar-item {
-            padding: 12px 15px;
-            border-radius: 14px;
-            cursor: pointer;
-            margin-bottom: 6px;
-        }
-        
-        .sidebar-item:hover {
-            background: #f3f4f6;
-        }
-        
-        .sidebar-active {
-            background: #e6f0ff;
-        }
-    .content {  margin-left: 260px;
-            padding: 30px; }
+      width: 240px;
+      background: white;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+      padding: 20px;
+    }
+    .sidebar-item {
+      padding: 12px 15px;
+      border-radius: 14px;
+      cursor: pointer;
+      margin-bottom: 6px;
+    }
+    .sidebar-item:hover { background: #f3f4f6; }
+    .sidebar-active { background: #fbe6ff; }
+
+    .content { margin-left: 260px; padding: 30px; }
     .stat-card { border-radius:18px; padding:18px; background:white; box-shadow:0 8px 24px rgba(12,12,20,0.04); }
     .draw-card { border-radius:14px; padding:16px; background:white; box-shadow:0 8px 24px rgba(12,12,20,0.04); display:flex; gap:16px; align-items:center; }
     .draw-left { flex:1; }
@@ -46,6 +39,21 @@
     .card-apple { background:white; border-radius:14px; padding:18px; box-shadow:0 8px 20px rgba(0,0,0,0.04); }
     .draw-actions button { margin-left:8px; }
     .search-input { max-width:360px; }
+
+    .date-pill {
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      background:#f3f4ff;
+      color:#111827;
+    }
+    .date-pill span.icon {
+      font-size:13px;
+    }
+
     @media (max-width:800px) {
       .draw-right { width:140px; text-align:left; margin-top:8px;}
       .draw-card { flex-direction:column; align-items:flex-start; }
@@ -54,165 +62,195 @@
 </head>
 <body>
 
-  <!-- Sidebar -->
+<!-- Sidebar -->
 <div class="sidebar">
-    <h4 class="mb-4">Admin Panel</h4>
+  <h4 class="mb-4">Admin Panel</h4>
 
-    <div class="sidebar-item sidebar-active">Dashboard</div>
-    <div class="sidebar-item" onclick="redirectTo('/admin/create-draw.html')">Create Draw</div>
-    <div class="sidebar-item" onclick="redirectTo('/admin/view-draws.html')">View Draws</div>
-    <div class="sidebar-item" onclick="redirectTo('/admin/create-voucher.html')">Create Voucher</div>
-    <div class="sidebar-item" onclick="redirectTo('/admin/participants.html')">Participants</div>
-    <div class="sidebar-item" onclick="redirectTo('/admin/winners.html')">Winners</div>
-    <div class="sidebar-item" onclick="redirectTo('/admin/login.html')">Logout</div>
+  <div class="sidebar-item sidebar-active">Dashboard</div>
+  <div class="sidebar-item" onclick="redirectTo('/admin/create-draw.html')">Create Draw</div>
+  <div class="sidebar-item" onclick="redirectTo('/admin/view-draws.html')">View Draws</div>
+  <div class="sidebar-item" onclick="redirectTo('/admin/participants.html')">Participants</div>
+  <div class="sidebar-item" onclick="redirectTo('/admin/winners.html')">Winners</div>
+  <div class="sidebar-item" onclick="redirectTo('/admin/login.html')">Logout</div>
 </div>
 
-  <div class="content">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <h2>Dashboard</h2>
-      <div class="small-muted">Welcome, Admin</div>
-    </div>
-
-    <!-- Top stats -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="small-muted">Total Draws</div>
-          <div style="font-size:22px; font-weight:700;" id="statTotalDraws">-</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="small-muted">Active Draws</div>
-          <div style="font-size:22px; font-weight:700;" id="statActiveDraws">-</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="small-muted">Total Participants</div>
-          <div style="font-size:22px; font-weight:700;" id="statParticipants">-</div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="stat-card">
-          <div class="small-muted">Total Vouchers</div>
-          <div style="font-size:22px; font-weight:700;" id="statVouchers">-</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Most winning / popular -->
-    <div class="row g-3 mb-5">
-      <div class="col-md-4">
-        <div class="card-apple">
-          <div class="small-muted">Most Winning User</div>
-          <div style="font-weight:700; font-size:18px;" id="mostWinningUser">-</div>
-          <div class="small-muted">Wins: <span id="mostWinningCount">-</span></div>
-        </div>
-      </div>
-      <div class="col-md-8">
-        <div class="card-apple">
-          <div class="small-muted">Most Popular Draw</div>
-          <div style="font-weight:700; font-size:18px;" id="mostPopularDraw">-</div>
-          <div class="small-muted">Participants: <span id="mostPopularDrawParticipants">-</span></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Active Draws (max 3) -->
-    <div class="mb-3 d-flex align-items-center justify-content-between">
-      <h4>Active Draws</h4>
-      <div class="small-muted">Showing up to 3 active draws</div>
-    </div>
-
-    <div id="activeDrawsContainer" class="mb-4 d-flex flex-column gap-3"></div>
-
-    <!-- All draws section -->
-    <div class="mb-2 d-flex align-items-center justify-content-between">
-      <h4>All Draws</h4>
-      <div>
-        <input id="searchDraws" class="form-control search-input d-inline-block me-2" placeholder="Search draws..." oninput="loadAllDraws()">
-        <select id="filterDrawStatus" class="form-control d-inline-block" style="width:160px" onchange="loadAllDraws()">
-          <option value="">All Status</option>
-          <option value="ACTIVE">Active</option>
-          <option value="DRAFT">Draft</option>
-          <option value="ENDED">Ended</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="allDrawsContainer" class="row g-3"></div>
-
+<div class="content">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2>Dashboard</h2>
+    <div class="small-muted">Welcome, Admin</div>
   </div>
 
-  <!-- Draw Detail Modal -->
-  <div class="modal fade" id="drawDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalDrawName">Draw Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div id="modalDrawContent">
-            <div class="mb-2 small-muted" id="modalDrawStatus"></div>
-            <p><strong>Prize:</strong> <span id="modalPrize"></span></p>
-            <p><strong>Department:</strong> <span id="modalDept"></span></p>
-            <p><strong>Start:</strong> <span id="modalStart"></span> &nbsp; <strong>End:</strong> <span id="modalEnd"></span></p>
-            <p><strong>Timer (sec):</strong> <span id="modalTimer"></span></p>
-            <p><strong>Total Participants:</strong> <span id="modalParticipantsCount"></span></p>
-            <p><strong>Description:</strong></p>
-            <div id="modalDescription" class="small-muted"></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-outline-secondary" type="button" id="modalViewParticipantsBtn">View Participants</button>
-          <button class="btn btn-outline-primary" type="button" id="modalRunWinnersBtn">Run Winners</button>
-          <button class="btn btn-dark" type="button" id="modalEditBtn">Edit Draw</button>
-        </div>
+  <!-- Top stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card" style="cursor:pointer;" onclick="redirectTo('/admin/view-draws.html')">
+        <div class="small-muted">Total Draws</div>
+        <div style="font-size:22px; font-weight:700;" id="statTotalDraws">-</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card" style="cursor:pointer;" onclick="redirectTo('/admin/view-draws.html')">
+        <div class="small-muted">Active Draws</div>
+        <div style="font-size:22px; font-weight:700;" id="statActiveDraws">-</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card" style="cursor:pointer;" onclick="redirectTo('/admin/participants.html')">
+        <div class="small-muted">Total Participants</div>
+        <div style="font-size:22px; font-weight:700;" id="statParticipants">-</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card" style="cursor:pointer;" onclick="redirectTo('/admin/create-voucher.html')">
+        <div class="small-muted">Total Vouchers</div>
+        <div style="font-size:22px; font-weight:700;" id="statVouchers">-</div>
       </div>
     </div>
   </div>
 
-  <!-- Participant Detail Modal -->
-  <div class="modal fade" id="participantModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="participantModalTitle">Participant Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div id="participantBody">
-            <p><strong>Name:</strong> <span id="p_name">-</span></p>
-            <p><strong>Email:</strong> <span id="p_email">-</span></p>
-            <p><strong>Phone:</strong> <span id="p_phone">-</span></p>
-            <p><strong>Department:</strong> <span id="p_dept">-</span></p>
-            <p><strong>External ID:</strong> <span id="p_external">-</span></p>
-            <p><strong>Voucher Used:</strong> <span id="p_voucher">-</span></p>
-            <p><strong>Joined At:</strong> <span id="p_joined">-</span></p>
-            <p><strong>Account Details:</strong></p>
-            <pre id="p_account" style="background:#f6f7fb;padding:10px;border-radius:8px;"></pre>
-            <p><strong>Active Joined Draws:</strong></p>
-            <ul id="p_active_draws"></ul>
-            <p><strong>Total Wins:</strong> <span id="p_wins">-</span></p>
-            <p><strong>Total Joined Draws (past):</strong> <span id="p_total_joined">-</span></p>
-            <div id="p_tags"></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
+  <!-- Most winning / popular -->
+  <div class="row g-3 mb-5">
+    <div class="col-md-4">
+      <div class="card-apple" id="mostWinningCard" style="cursor:pointer;">
+        <div class="small-muted">Most Winning User</div>
+        <div style="font-weight:700; font-size:18px;" id="mostWinningUser">-</div>
+        <div class="small-muted">Wins: <span id="mostWinningCount">-</span></div>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card-apple" id="mostPopularCard" style="cursor:pointer;">
+        <div class="small-muted">Most Popular Draw</div>
+        <div style="font-weight:700; font-size:18px;" id="mostPopularDraw">-</div>
+        <div class="small-muted">Participants: <span id="mostPopularDrawParticipants">-</span></div>
       </div>
     </div>
   </div>
 
+  <!-- Active Draws (max 3) -->
+  <div class="mb-3 d-flex align-items-center justify-content-between">
+    <h4>Active Draws</h4>
+    <div class="small-muted">Showing up to 3 active draws</div>
+  </div>
+
+  <div id="activeDrawsContainer" class="mb-4 d-flex flex-column gap-3"></div>
+
+  <!-- All draws section -->
+  <div class="mb-2 d-flex align-items-center justify-content-between">
+    <h4>All Draws</h4>
+    <div>
+      <input id="searchDraws" class="form-control search-input d-inline-block me-2" placeholder="Search draws..." oninput="loadAllDraws()">
+      <select id="filterDrawStatus" class="form-control d-inline-block" style="width:160px" onchange="loadAllDraws()">
+        <option value="">All Status</option>
+        <option value="ACTIVE">Active</option>
+        <option value="DRAFT">Draft</option>
+        <option value="ENDED">Ended</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="allDrawsContainer" class="row g-3"></div>
+
+</div>
+
+<!-- Draw Detail Modal -->
+<div class="modal fade" id="drawDetailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDrawName">Draw Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="modalDrawContent">
+          <div class="mb-2 small-muted" id="modalDrawStatus"></div>
+          <p><strong>Prize:</strong> <span id="modalPrize"></span></p>
+          <p><strong>Department:</strong> <span id="modalDept"></span></p>
+          <p>
+            <strong>Start:</strong> <span id="modalStart"></span>
+            &nbsp; <strong>End:</strong> <span id="modalEnd"></span>
+          </p>
+          <p><strong>Timer (sec):</strong> <span id="modalTimer"></span></p>
+          <p><strong>Total Participants:</strong> <span id="modalParticipantsCount"></span></p>
+          <p><strong>Description:</strong></p>
+          <div id="modalDescription" class="small-muted"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" type="button" id="modalViewParticipantsBtn">Participants</button>
+        <button class="btn btn-outline-primary" type="button" id="modalRunWinnersBtn">Run Winners</button>
+        <!-- Edit now points to create-draw in edit mode -->
+        <button class="btn btn-dark" type="button" id="modalEditBtn">Edit Draw</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Participant Detail Modal (unchanged) -->
+<div class="modal fade" id="participantModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="participantModalTitle">Participant Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="participantBody">
+          <p><strong>Name:</strong> <span id="p_name">-</span></p>
+          <p><strong>Email:</strong> <span id="p_email">-</span></p>
+          <p><strong>Phone:</strong> <span id="p_phone">-</span></p>
+          <p><strong>Department:</strong> <span id="p_dept">-</span></p>
+          <p><strong>External ID:</strong> <span id="p_external">-</span></p>
+          <p><strong>Voucher Used:</strong> <span id="p_voucher">-</span></p>
+          <p><strong>Joined At:</strong> <span id="p_joined">-</span></p>
+          <p><strong>Account Details:</strong></p>
+          <pre id="p_account" style="background:#f6f7fb;padding:10px;border-radius:8px;"></pre>
+          <p><strong>Active Joined Draws:</strong></p>
+          <ul id="p_active_draws"></ul>
+          <p><strong>Total Wins:</strong> <span id="p_wins">-</span></p>
+          <p><strong>Total Joined Draws (past):</strong> <span id="p_total_joined">-</span></p>
+          <div id="p_tags"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS for Modals -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/assets/js/common.js"></script>
+
 <script>
-  // Load dashboard stats, active draws (max 3), and all draws list
+  // ---------- Helpers: Date formatting ----------
+  function pad2(n) {
+    return n < 10 ? "0" + n : "" + n;
+  }
+
+  function formatDateTime(value) {
+    if (!value) return "-";
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+
+    var day = d.getDate();
+    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    var month = months[d.getMonth()];
+    var year = d.getFullYear();
+
+    var hours = d.getHours();
+    var minutes = d.getMinutes();
+    var ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    if (hours === 0) hours = 12;
+
+    return day + " " + month + " " + year + " · " + pad2(hours) + ":" + pad2(minutes) + " " + ampm;
+  }
+
+  // ---------- On load ----------
   window.onload = function() {
     loadStats();
-    loadActiveDraws(); // active draws max 3
+    loadActiveDraws();
     loadAllDraws();
   };
 
@@ -229,6 +267,20 @@
         document.getElementById("mostWinningCount").innerText = d.mostWinningCount !== undefined ? d.mostWinningCount : "-";
         document.getElementById("mostPopularDraw").innerText = d.mostPopularDrawName || "-";
         document.getElementById("mostPopularDrawParticipants").innerText = d.mostPopularDrawParticipants !== undefined ? d.mostPopularDrawParticipants : "-";
+
+        var mwCard = document.getElementById("mostWinningCard");
+        if (mwCard) {
+          mwCard.onclick = function() {
+            redirectTo("/admin/participants.html");
+          };
+        }
+
+        var mpCard = document.getElementById("mostPopularCard");
+        if (mpCard && d.mostPopularDrawId) {
+          mpCard.onclick = function() {
+            openDrawModal(d.mostPopularDrawId);
+          };
+        }
       });
   }
 
@@ -250,26 +302,60 @@
           var d = list[i];
           var card = document.createElement("div");
           card.className = "draw-card";
-          var left = "<div class='draw-left'><div style='font-weight:700;font-size:16px;'>" + escapeHtml(d.name) + "</div>" +
-                     "<div class='small-muted' style='margin-top:6px;'>"+ (d.department ? "Department: "+escapeHtml(d.department) : "") +"</div>" +
-                     "<div style='margin-top:8px;'>" +
-                       "<span class='meta-pill'>" + (d.prizeType || '-') + "</span>" +
-                       "<span class='meta-pill'>Participants: " + (d.totalParticipants !== undefined ? d.totalParticipants : '-') + "</span>" +
-                     "</div></div>";
-          var prizeText = (d.prizeType === "CASH" ? ("Prize: " + (d.prizeAmount !== null ? d.prizeAmount : "-")) : ("Voucher: " + (d.voucherCode || "-")));
+          (function(cardEl, drawId) {
+            cardEl.style.cursor = "pointer";
+            cardEl.onclick = function() { openDrawModal(drawId); };
+          })(card, d.id);
+
+          var endColor = "";
+          if (d.endDate) {
+            var t = Date.parse(d.endDate);
+            if (!isNaN(t)) {
+              if (t < new Date().getTime()) {
+                endColor = "color:#b02a2a;font-weight:600;";
+              } else {
+                endColor = "color:#0a7a2a;font-weight:600;";
+              }
+            }
+          }
+
+          var left = "<div class='draw-left'>" +
+                       "<div style='font-weight:700;font-size:16px;'>" + escapeHtml(d.name) + "</div>" +
+                       "<div class='small-muted' style='margin-top:6px;'>" +
+                         (d.department ? "Department: "+escapeHtml(d.department) : "") +
+                       "</div>" +
+                       "<div style='margin-top:8px;'>" +
+                         "<span class='meta-pill'>" + (d.prizeType || '-') + "</span>" +
+                         "<span class='meta-pill'>Participants: " + (d.totalParticipants !== undefined ? d.totalParticipants : '-') + "</span>" +
+                       "</div>" +
+                     "</div>";
+
+          var prizeText = (d.prizeType === "CASH"
+                          ? ("Prize: " + (d.prizeAmount !== null ? d.prizeAmount : "-"))
+                          : ("Voucher: " + (d.voucherCode || "-")));
+
           var status = (d.status || "UNKNOWN");
-          var statusColor = (status === "ACTIVE" ? "background:#dff6e6;color:#0a7a2a;padding:6px 10px;border-radius:10px;font-weight:600;" :
-                            (status === "ENDED" ? "background:#ffecec;color:#b02a2a;padding:6px 10px;border-radius:10px;font-weight:600;" :
-                            "background:#fff4db;color:#8a5a00;padding:6px 10px;border-radius:10px;font-weight:600;"));
+          var statusColor = (status === "ACTIVE"
+                            ? "background:#dff6e6;color:#0a7a2a;padding:6px 10px;border-radius:10px;font-weight:600;"
+                            : (status === "ENDED"
+                              ? "background:#ffecec;color:#b02a2a;padding:6px 10px;border-radius:10px;font-weight:600;"
+                              : "background:#fff4db;color:#8a5a00;padding:6px 10px;border-radius:10px;font-weight:600;"));
+
           var right = "<div class='draw-right'>" +
-                      "<div style='" + statusColor + "'>" + escapeHtml(status) + "</div>" +
-                      "<div class='small-muted' style='margin-top:8px;'>" + escapeHtml(prizeText) + "</div>" +
-                      "<div class='small-muted' style='margin-top:6px;'>Start: " + (d.startDate || '-') + "</div>" +
-                      "<div class='small-muted'>End: " + (d.endDate || '-') + "</div>" +
-                      "<div class='small-muted' style='margin-top:8px;'>Timer: " + (d.timerSeconds || '-') + " sec</div>" +
-                      "<div class='draw-actions' style='margin-top:10px;'>" +
-                        "<button class='btn btn-sm btn-outline-primary' onclick='openDrawModal(" + d.id + ")'>Manage Draw</button>" +
-                      "</div></div>";
+                        "<div style='" + statusColor + "'>" + escapeHtml(status) + "</div>" +
+                        "<div class='small-muted' style='margin-top:8px;'>" + escapeHtml(prizeText) + "</div>" +
+                        "<div class='small-muted' style='margin-top:6px;'>" +
+                          "<span class='date-pill'><span class='icon'>🕒</span>" + formatDateTime(d.startDate) + "</span>" +
+                        "</div>" +
+                        "<div class='small-muted' style='margin-top:4px;'>" +
+                          "<span class='date-pill' style='" + endColor + "'><span class='icon'>🏁</span>" + formatDateTime(d.endDate) + "</span>" +
+                        "</div>" +
+                        "<div class='small-muted' style='margin-top:8px;'>Timer: " + (d.timerSeconds || '-') + " sec</div>" +
+                        "<div class='draw-actions' style='margin-top:10px;'>" +
+                          "<button class='btn btn-sm btn-outline-secondary' onclick='event.stopPropagation(); redirectTo(\"/admin/participants.html?id=" + d.id + "\")'>Participants</button>" +
+                        "</div>" +
+                      "</div>";
+
           card.innerHTML = left + right;
           container.appendChild(card);
         }
@@ -296,27 +382,58 @@
 
           var col = document.createElement("div");
           col.className = "col-12";
+
+          var endColor = "";
+          if (d.endDate) {
+            var t = Date.parse(d.endDate);
+            if (!isNaN(t)) {
+              if (t < new Date().getTime()) {
+                endColor = "color:#b02a2a;font-weight:600;";
+              } else {
+                endColor = "color:#0a7a2a;font-weight:600;";
+              }
+            }
+          }
+
           var html = "<div class='card-apple p-3 d-flex justify-content-between align-items-center'>" +
             "<div style='flex:1'>" +
               "<div style='font-weight:700;'>" + escapeHtml(d.name) + "</div>" +
-              "<div class='small-muted' style='margin-top:6px;'>" + (d.department ? "Department: "+escapeHtml(d.department) : "") + "</div>" +
-              "<div class='small-muted' style='margin-top:6px;'>Prize: " + (d.prizeType === "CASH" ? (d.prizeAmount || '-') : (d.voucherCode || '-')) + "</div>" +
+              "<div class='small-muted' style='margin-top:6px;'>" +
+                (d.department ? "Department: "+escapeHtml(d.department) : "") +
+              "</div>" +
+              "<div class='small-muted' style='margin-top:6px;'>Prize: " +
+                (d.prizeType === "CASH" ? (d.prizeAmount || '-') : (d.voucherCode || '-')) +
+              "</div>" +
+              "<div class='small-muted' style='margin-top:6px;'>" +
+                "<span class='date-pill' style='" + endColor + "'><span class='icon'>🏁</span>" + formatDateTime(d.endDate) + "</span>" +
+              "</div>" +
             "</div>" +
             "<div style='text-align:right'>" +
-              "<div class='small-muted'>Participants: " + (d.totalParticipants !== undefined ? d.totalParticipants : '-') + "</div>" +
+              "<div class='small-muted'>Participants: " +
+                (d.totalParticipants !== undefined ? d.totalParticipants : '-') +
+              "</div>" +
               "<div style='margin-top:8px;'>" +
-                "<button class='btn btn-sm btn-outline-primary' onclick='openDrawModal(" + d.id + ")'>Manage</button>" +
-                "<button class='btn btn-sm btn-outline-secondary ms-2' onclick='redirectTo(\"/admin/view-draws.html\")'>All Draws</button>" +
+                "<button class='btn btn-sm btn-outline-primary' onclick='event.stopPropagation(); openDrawModal(" + d.id + ")'>View Details</button>" +
+                "<button class='btn btn-sm btn-outline-secondary ms-2' onclick='event.stopPropagation(); redirectTo(\"/admin/participants.html?id=" + d.id + "\")'>Participants</button>" +
               "</div>" +
             "</div>" +
           "</div>";
+
           col.innerHTML = html;
+
+          (function(colEl, drawId) {
+            var cardEl = colEl.querySelector(".card-apple");
+            if (cardEl) {
+              cardEl.style.cursor = "pointer";
+              cardEl.onclick = function() { openDrawModal(drawId); };
+            }
+          })(col, d.id);
+
           container.appendChild(col);
         }
       });
   }
 
-  // Open draw modal - loads draw details and wires modal buttons
   function openDrawModal(drawId) {
     apiFetch("/draws/" + drawId, "GET")
       .then(function(json) {
@@ -326,24 +443,54 @@
         }
         var d = json.data;
         document.getElementById("modalDrawName").innerText = d.name || "Draw Details";
-        document.getElementById("modalDrawStatus").innerText = (d.status || "-");
-        document.getElementById("modalPrize").innerText = (d.prizeType === "CASH" ? (d.prizeAmount || '-') : (d.voucherCode || '-'));
+
+        var statusText = d.status || "-";
+        var statusHtml = "";
+        var now = new Date().getTime();
+        var endColor = "";
+        if (d.endDate) {
+          var t = Date.parse(d.endDate);
+          if (!isNaN(t)) {
+            if (t < now) {
+              endColor = "color:#b02a2a;font-weight:600;";
+              statusHtml = "<span style='background:#ffecec;color:#b02a2a;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;'>" +
+                           escapeHtml(statusText) + " • Ended</span>";
+            } else {
+              endColor = "color:#0a7a2a;font-weight:600;";
+              statusHtml = "<span style='background:#dff6e6;color:#0a7a2a;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;'>" +
+                           escapeHtml(statusText) + " • Active</span>";
+            }
+          } else {
+            statusHtml = escapeHtml(statusText);
+          }
+        } else {
+          statusHtml = escapeHtml(statusText);
+        }
+
+        document.getElementById("modalDrawStatus").innerHTML = statusHtml;
+        document.getElementById("modalPrize").innerText =
+          (d.prizeType === "CASH" ? (d.prizeAmount || '-') : (d.voucherCode || '-'));
         document.getElementById("modalDept").innerText = (d.department || '-');
-        document.getElementById("modalStart").innerText = (d.startDate || '-');
-        document.getElementById("modalEnd").innerText = (d.endDate || '-');
+        document.getElementById("modalStart").innerText = formatDateTime(d.startDate);
+
+        var modalEnd = document.getElementById("modalEnd");
+        modalEnd.innerText = formatDateTime(d.endDate);
+        modalEnd.style.cssText = endColor ? endColor : "";
+
         document.getElementById("modalTimer").innerText = (d.timerSeconds || '-');
-        document.getElementById("modalParticipantsCount").innerText = (d.totalParticipants !== undefined ? d.totalParticipants : '-');
+        document.getElementById("modalParticipantsCount").innerText =
+          (d.totalParticipants !== undefined ? d.totalParticipants : '-');
         document.getElementById("modalDescription").innerText = (d.description || '-');
 
-        // wire buttons
         document.getElementById("modalViewParticipantsBtn").onclick = function() {
           redirectTo("/admin/participants.html?id=" + drawId);
         };
         document.getElementById("modalRunWinnersBtn").onclick = function() {
           redirectTo("/admin/winners.html?id=" + drawId);
         };
+        // Edit goes to create-draw in edit mode (you can use query param in that page)
         document.getElementById("modalEditBtn").onclick = function() {
-          redirectTo("/admin/edit-draw.html?id=" + drawId);
+          redirectTo("/admin/create-draw.html?id=" + drawId + "&mode=edit");
         };
 
         var modal = new bootstrap.Modal(document.getElementById('drawDetailModal'));
@@ -351,7 +498,6 @@
       });
   }
 
-  // Participant detail modal: reusable everywhere
   function showParticipantDetail(participantId) {
     if (!participantId) return;
     apiFetch("/admins/participants/" + participantId, "GET")
@@ -376,7 +522,6 @@
         } catch (e) {
           document.getElementById("p_account").innerText = (acc || "-");
         }
-        // active joined draws - backend may include this field or not
         var activeList = document.getElementById("p_active_draws");
         activeList.innerHTML = "";
         if (p.activeJoinedDraws && p.activeJoinedDraws.length > 0) {
@@ -392,7 +537,6 @@
         }
         document.getElementById("p_wins").innerText = (p.winCount !== undefined ? p.winCount : "-");
         document.getElementById("p_total_joined").innerText = (p.totalJoined !== undefined ? p.totalJoined : "-");
-        // tags
         var tags = document.getElementById("p_tags");
         tags.innerHTML = "";
         if (p.mostWinning === true) {
@@ -407,7 +551,6 @@
       });
   }
 
-  // small HTML escape helper
   function escapeHtml(s) {
     if (s === undefined || s === null) return "";
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');

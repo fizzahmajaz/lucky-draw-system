@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Guest Winners</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+  <style>
+    body{ background:#f6f7fb; }
+    .card-apple{
+      background:white; padding:18px; border-radius:18px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.05);
+      margin-bottom:14px;
+    }
+    .page-title{ font-size:24px; font-weight:700; }
+    .empty-box{
+      background:#f9fafb; border-radius:14px; padding:16px;
+      text-align:center; color:#6b7280;
+    }
+    .winner-badge{
+      display:inline-block; padding:3px 8px; border-radius:999px;
+      font-size:11px; background:#dcfce7; color:#166534;
+      margin-left:6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast-box" id="toast-box"></div>
+
+<div class="container py-4" style="max-width:900px;">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <div class="page-title">Today is the Lucky Day ✨</div>
+      <div class="text-muted">Watch draws, countdowns and winners appear in real time.</div>
+    </div>
+    <button class="btn btn-outline-secondary" onclick="window.location.href='/user/guest-dashboard.html'">
+      ⟵ Back to Dashboard
+    </button>
+  </div>
+
+  <div id="winnersContainer"></div>
+
+</div>
+
+<script src="/assets/js/common.js"></script>
+<script>
+var uid = null;
+var countdowns = []; // {drawId, endTime, elementId}
+
+// On load
+window.onload = function(){
+  uid = localStorage.getItem("userId");
+  if(!uid){
+    showToast("Please use guest access first", false);
+    setTimeout(function(){ window.location.href="/user/guest.html"; }, 800);
+    return;
+  }
+  loadDrawsAndWinners();
+};
+
+// ---------------- LOAD DRAWS + SETUP CARDS ----------------
+async function loadDrawsAndWinners(){
+  var container = document.getElementById("winnersContainer");
+  container.innerHTML = "<div class='empty-box'>Loading draws...</div>";
+  countdowns = [];
+
+  var json = await apiFetch("/draws/active?page=0&size=100", "GET");
+  if(!json || !json.success){
+    container.innerHTML = "<div class='empty-box'>Unable to load draws.</div>";
+    return;
+  }
+
+  var list = json.data && json.data.content ? json.data.content : [];
+  container.innerHTML = "";
+
+  var shown = 0;
+
+  for(var i=0; i<list.length; i++){
+    var d = list[i];
+
+    var access = d.accessLevel || "ALL";
+    var voucher = d.voucherCode || "";
+
+    // Guest sees only ALL-access (public) draws here too
+    if(access !== "ALL" && voucher !== ""){
+      continue;
+    }
+
+    shown++;
+
+    var card = document.createElement("div");
+    card.className = "card-apple";
+
+    var timerId = "timer-" + d.id;
+    var loadingId = "loading-" + d.id;
+    var winnersId = "winners-" + d.id;
+
+    var startTxt = d.startDate || "-";
+    var endTxt = d.endDate || "-";
+
+    card.innerHTML =
+      "<div class='d-flex justify-content-between align-items-center mb-1'>" +
+        "<div>" +
+          "<h5 class='mb-1'>" + (d.name || "-") + "</h5>" +
+          "<div class='text-muted small'>Prize: " + (d.prizeType || "-") + "</div>" +
+        "</div>" +
+        "<div class='text-end small text-muted'>" +
+          "<div>Start: " + startTxt + "</div>" +
+          "<div>End: <span>" + endTxt + "</span></div>" +
+        "</div>" +
+      "</div>" +
+      "<div class='small mb-2'><strong>Lucky draw in:</strong> <span id='" + timerId + "'>--:--:--</span></div>" +
+      "<div id='" + loadingId + "' class='small text-muted'>" +
+        "<span class='spinner-border spinner-border-sm me-1'></span>" +
+        "Luck is loading… winners will appear after the draw." +
+      "</div>" +
+      "<div id='" + winnersId + "' class='mt-2'></div>";
+
+    container.appendChild(card);
+
+    // Store countdown data
+    if(d.endDate){
+      var endTime = Date.parse(d.endDate);
+      if(!isNaN(endTime)){
+        countdowns.push({ drawId: d.id, endTime: endTime, elementId: timerId, loadingId: loadingId, winnersId: winnersId });
+      }
+    }
+
+    // load winners for this draw
+    loadWinnersForDraw(d.id, winnersId, loadingId);
+  }
+
+  if(shown === 0){
+    container.innerHTML = "<div class='empty-box'>No public draws found for today.</div>";
+    return;
+  }
+
+  startCountdownTick();
+}
+
+// ---------------- COUNTDOWN TICK ----------------
+function startCountdownTick(){
+  if(countdowns.length === 0) return;
+
+  setInterval(function(){
+    var now = new Date().getTime();
+
+    for(var i=0; i<countdowns.length; i++){
+      var cd = countdowns[i];
+      var diff = cd.endTime - now;
+      var el = document.getElementById(cd.elementId);
+      if(!el) continue;
+
+      if(diff <= 0){
+        el.innerHTML = "00:00:00 (Lucky draw completed)";
+        continue;
+      }
+
+      var totalSeconds = Math.floor(diff / 1000);
+      var hrs = Math.floor(totalSeconds / 3600);
+      var mins = Math.floor((totalSeconds % 3600) / 60);
+      var secs = totalSeconds % 60;
+
+      el.innerHTML =
+        (hrs < 10 ? "0" + hrs : hrs) + ":" +
+        (mins < 10 ? "0" + mins : mins) + ":" +
+        (secs < 10 ? "0" + secs : secs);
+    }
+  }, 1000);
+}
+
+// ---------------- LOAD WINNERS FOR A DRAW ----------------
+async function loadWinnersForDraw(drawId, winnersElementId, loadingElementId){
+  var json = await apiFetch("/draws/" + drawId + "/winners?page=0&size=50", "GET");
+
+  var winnersBox = document.getElementById(winnersElementId);
+  var loadingBox = document.getElementById(loadingElementId);
+
+  if(!winnersBox || !loadingBox) return;
+
+  if(!json || !json.success){
+    // keep "Luck is loading…" if fail
+    return;
+  }
+
+  var list = [];
+  if(json.data){
+    if(Array.isArray(json.data)){
+      list = json.data;
+    } else if(json.data.content && Array.isArray(json.data.content)){
+      list = json.data.content;
+    }
+  }
+
+  if(!list || list.length === 0){
+    // no winners yet -> keep loading message
+    return;
+  }
+
+  // winners exist → hide loading text + show list
+  loadingBox.style.display = "none";
+
+  var html = "<div class='mt-2'><strong>Winners:</strong><ul class='mb-0'>";
+  var currentUserId = uid;
+
+  for(var i=0; i<list.length; i++){
+    var w = list[i];
+
+    var name = "-";
+    if(w.userName) name = w.userName;
+    else if(w.name) name = w.name;
+    else if(w.user && w.user.name) name = w.user.name;
+    else if(w.user && w.user.username) name = w.user.username;
+
+    var tag = "";
+    if(w.userId && currentUserId && String(w.userId) === String(currentUserId)){
+      tag = "<span class='winner-badge'>You</span>";
+      showToast("🎉 You are one of today's lucky winners!", true);
+    }
+
+    html += "<li>" + name + " " + tag + "</li>";
+  }
+
+  html += "</ul></div>";
+
+  winnersBox.innerHTML = html;
+}
+</script>
+
+</body>
+</html>

@@ -22,172 +22,279 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
             padding: 20px;
         }
-        
+
         .sidebar-item {
             padding: 12px 15px;
             border-radius: 14px;
             cursor: pointer;
             margin-bottom: 6px;
         }
-        
+
         .sidebar-item:hover {
             background: #f3f4f6;
         }
-        
+
         .sidebar-active {
-            background: #e6f0ff;
+            background: #fbe6ff;
         }
-        
+
         .content {
             margin-left: 260px;
             padding: 30px;
+        }
+
+        .badge-access-all {
+            background: #dff6e6;
+            color: #0a7a2a;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .badge-access-restricted {
+            background: #fff4db;
+            color: #8a5a00;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .btn-icon-only {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+        }
+
+        .btn-icon-only span {
+            font-size: 16px;
+            line-height: 1;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="toast-box" id="toast-box"></div>
+<div class="toast-box" id="toast-box"></div>
 
-    <div class="sidebar">
-        <h4 class="mb-4">Admin Panel</h4>
+<div class="sidebar">
+    <h4 class="mb-4">Admin Panel</h4>
 
-        <div class="sidebar-item" onclick="redirectTo('/admin/dashboard.html')">Dashboard</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/create-draw.html')">Create Draw</div>
-        <div class="sidebar-item sidebar-active">View Draws</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/create-voucher.html')">Create Voucher</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/participants.html')">Participants</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/winners.html')">Winners</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/login.html')">Logout</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/dashboard.html')">Dashboard</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/create-draw.html')">Create Draw</div>
+    <div class="sidebar-item sidebar-active">View Draws</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/participants.html')">Participants</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/winners.html')">Winners</div>
+    <div class="sidebar-item" onclick="redirectTo('/admin/login.html')">Logout</div>
+</div>
+
+<div class="content">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">All Draws</h2>
+        <div class="text-muted" id="totalDrawsLabel">Total: 0 draws</div>
     </div>
 
-    <div class="content">
-        <h2 class="mb-4">All Draws</h2>
+    <!-- Search & Filters -->
+    <div class="card-apple mb-4">
+        <div class="row g-3">
 
-        <!-- Search & Filters -->
-        <div class="card-apple mb-4">
-            <div class="row g-3">
+            <!-- Search (Name + Voucher Code) -->
+            <div class="col-md-4">
+                <input id="searchInput" class="form-control" placeholder="Search by name or voucher code" oninput="loadDraws()">
+            </div>
 
-                <div class="col-md-4">
-                    <input id="searchInput" class="form-control" placeholder="Search by name" oninput="loadDraws()">
-                </div>
+            <!-- Start Date -->
+            <div class="col-md-3">
+                <input type="date" id="filterStartDate" class="form-control" onchange="loadDraws()">
+            </div>
 
-                <div class="col-md-3">
-                    <select id="filterPrizeType" class="form-control" onchange="loadDraws()">
-                    <option value="">Prize Type (All)</option>
-                    <option value="CASH">Cash</option>
-                    <option value="VOUCHER">Voucher</option>
+
+            <!-- Access Filter -->
+            <div class="col-md-3">
+                <select id="filterAccess" class="form-control" onchange="loadDraws()">
+                    <option value="">Access (All)</option>
+                    <option value="ALL">ALL</option>
+                    <option value="RESTRICTED">RESTRICTED</option>
                 </select>
-                </div>
+            </div>
 
-                <div class="col-md-3">
-                    <select id="filterStatus" class="form-control" onchange="loadDraws()">
+            <!-- Status Filter -->
+            <div class="col-md-3">
+                <select id="filterStatus" class="form-control" onchange="loadDraws()">
                     <option value="">Status (All)</option>
                     <option value="ACTIVE">Active</option>
                     <option value="DRAFT">Draft</option>
                     <option value="ENDED">Ended</option>
                 </select>
-                </div>
-
             </div>
-        </div>
 
-        <!-- Draws Table -->
-        <div class="card-apple">
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Prize Type</th>
-                            <th>Participants</th>
-                            <th>Status</th>
-                            <th>Start</th>
-                            <th>End</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="drawsTbody"></tbody>
-                </table>
-            </div>
         </div>
-
     </div>
 
-    <script src="/assets/js/common.js"></script>
+    <!-- Draws Table -->
+    <div class="card-apple">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th style="width:60px;">No.</th>
+                    <th>Name</th>
+                    <th>Access</th>
+                    <th>Participants</th>
+                    <th>Status</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th style="width:220px;">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="drawsTbody"></tbody>
+            </table>
+        </div>
+    </div>
 
-    <script>
-        window.onload = function() {
-            loadDraws();
-        };
+</div>
 
-        function loadDraws() {
-            var search = document.getElementById("searchInput").value.toLowerCase();
-            var prizeFilter = document.getElementById("filterPrizeType").value;
-            var statusFilter = document.getElementById("filterStatus").value;
+<script src="/assets/js/common.js"></script>
 
-            apiFetch("/draws?page=0&size=100", "GET")
-                .then(function(json) {
+<script>
+    window.onload = function () {
+        loadDraws();
+    };
 
-                    if (!json || !json.success) {
-                        showToast("Failed to load draws", false);
-                        return;
+    function formatDateTime(value) {
+        if (!value) return "-";
+        var d = new Date(value);
+        if (isNaN(d.getTime())) return value;
+
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        var day = String(d.getDate()).padStart(2, "0");
+        var month = months[d.getMonth()];
+        var year = d.getFullYear();
+
+        var hours = d.getHours();
+        var minutes = String(d.getMinutes()).padStart(2, "0");
+        var ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+
+        return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
+    }
+
+    function loadDraws() {
+        var search = document.getElementById("searchInput").value.toLowerCase();
+        var accessFilter = document.getElementById("filterAccess").value;
+        var statusFilter = document.getElementById("filterStatus").value;
+        var filterStart = document.getElementById("filterStartDate").value;
+
+        apiFetch("/draws?page=0&size=200", "GET")
+            .then(function (json) {
+                if (!json || !json.success) {
+                    showToast("Failed to load draws", false);
+                    return;
+                }
+
+                var pageData = json.data;
+                var list = pageData?.content || [];
+                var tbody = document.getElementById("drawsTbody");
+                tbody.innerHTML = "";
+
+                document.getElementById("totalDrawsLabel").innerText =
+                    "Total: " + (pageData?.totalElements ?? list.length) + " draws";
+
+                var rowIndex = 0;
+
+                for (var i = 0; i < list.length; i++) {
+                    var d = list[i];
+
+                    var drawName = (d.name || "").toLowerCase();
+                    var voucherCode = (d.voucherCode || "").toLowerCase();
+                    var searchText = search.trim();
+
+                    // Search (Name + Code)
+                    if (searchText) {
+                        var foundName = drawName.includes(searchText);
+                        var foundCode = voucherCode.includes(searchText);
+                        if (!foundName && !foundCode) continue;
                     }
 
-                    var list = json.data.content;
-                    var tbody = document.getElementById("drawsTbody");
-                    tbody.innerHTML = "";
-
-                    for (var i = 0; i < list.length; i++) {
-                        var d = list[i];
-
-                        // Search filter
-                        if (search && d.name.toLowerCase().indexOf(search) === -1) continue;
-
-                        // Prize filter
-                        if (prizeFilter && d.prizeType !== prizeFilter) continue;
-
-                        // Status filter
-                        if (statusFilter && d.status !== statusFilter) continue;
-
-                        var tr = document.createElement("tr");
-
-                        tr.innerHTML =
-                            "<td>" + d.name + "</td>" +
-                            "<td>" + d.prizeType + "</td>" +
-                            "<td>" + d.totalParticipants + "</td>" +
-                            "<td>" + d.status + "</td>" +
-                            "<td>" + (d.startDate || '-') + "</td>" +
-                            "<td>" + (d.endDate || '-') + "</td>" +
-                            "<td>" +
-                            "<button class='btn btn-sm btn-primary me-1' onclick='viewParticipants(" + d.id + ")'>Participants</button>" +
-                            "<button class='btn btn-sm btn-warning me-1' onclick='editDraw(" + d.id + ")'>Edit</button>" +
-                            "<button class='btn btn-sm btn-success me-1' onclick='runWinners(" + d.id + ")'>Run</button>" +
-                            "<button class='btn btn-sm btn-dark' onclick='viewWinners(" + d.id + ")'>Winners</button>" +
-                            "</td>";
-
-                        tbody.appendChild(tr);
+                    // Date filter - Start
+                    if (filterStart) {
+                        var drawStart = d.startDate ? d.startDate.substring(0, 10) : "";
+                        if (drawStart < filterStart) continue;
                     }
-                });
-        }
 
-        function viewParticipants(id) {
-            redirectTo("/admin/participants.html?id=" + id);
-        }
 
-        function editDraw(id) {
-            redirectTo("/admin/edit-draw.html?id=" + id);
-        }
+                    // Access Filter
+                    var accessLevel = d.voucherAccessLevel || "ALL";
+                    if (accessFilter && accessLevel !== accessFilter) continue;
 
-        function runWinners(id) {
-            redirectTo("/admin/winners.html?id=" + id);
-        }
+                    // Status Filter
+                    if (statusFilter && d.status !== statusFilter) continue;
 
-        function viewWinners(id) {
-            redirectTo("/admin/winners.html?id=" + id);
-        }
-    </script>
+                    rowIndex++;
+
+                    var accessHtml =
+                        accessLevel === "ALL"
+                            ? "<span class='badge-access-all'>ALL</span>"
+                            : "<span class='badge-access-restricted'>" +
+                              escapeHtml(d.voucherCode || "") +
+                              "</span>";
+
+                    var tr = document.createElement("tr");
+                    tr.innerHTML =
+                        "<td>" + rowIndex + "</td>" +
+                        "<td>" + escapeHtml(d.name) + "</td>" +
+                        "<td>" + accessHtml + "</td>" +
+                        "<td>" + (d.totalParticipants ?? "-") + "</td>" +
+                        "<td>" + d.status + "</td>" +
+                        "<td>" + formatDateTime(d.startDate) + "</td>" +
+                        "<td>" + formatDateTime(d.endDate) + "</td>" +
+                        "<td>" +
+                        "<button class='btn btn-sm btn-outline-primary btn-icon-only me-1' title='Participants' onclick='viewParticipants(" + d.id + ")'><span>👥</span></button>" +
+                        "<button class='btn btn-sm btn-outline-warning btn-icon-only me-1' title='Edit Draw' onclick='editDraw(" + d.id + ")'><span>✏️</span></button>" +
+                        "<button class='btn btn-sm btn-success me-1' title='Run Winners' onclick='runWinners(" + d.id + ")'>Run</button>" +
+                        "<button class='btn btn-sm btn-dark' title='View Winners' onclick='viewWinners(" + d.id + ")'>Winners</button>" +
+                        "</td>";
+
+                    tbody.appendChild(tr);
+                }
+
+                if (rowIndex === 0) {
+                    tbody.innerHTML =
+                        "<tr><td colspan='8' class='text-muted text-center'>No draws found</td></tr>";
+                }
+            });
+    }
+
+    function viewParticipants(id) {
+        redirectTo("/admin/participants.html?id=" + id);
+    }
+
+    function editDraw(id) {
+        redirectTo("/admin/edit-draw.html?id=" + id);
+    }
+
+    function runWinners(id) {
+        redirectTo("/admin/winners.html?id=" + id);
+    }
+
+    function viewWinners(id) {
+        redirectTo("/admin/winners.html?id=" + id);
+    }
+
+    function escapeHtml(s) {
+        return (s ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+</script>
 
 </body>
-
 </html>

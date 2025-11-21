@@ -34,9 +34,7 @@ public class ParticipantDraw {
     @JoinColumn(name = "draw_id")
     private Draw draw;
 
-    @ManyToOne
-    @JoinColumn(name="voucher_used_id")
-    private Voucher voucherUsed;
+    private String voucherUsed;
 
     @Column(name = "joined_at")
     private LocalDateTime joinedAt;

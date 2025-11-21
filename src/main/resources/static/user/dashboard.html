@@ -5,240 +5,813 @@
     <meta charset="UTF-8">
     <title>User Dashboard</title>
 
+    <!-- Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <!-- Global CSS -->
     <link rel="stylesheet" href="/assets/css/style.css">
 
     <style>
         body {
-            background: #f1f5f9;
+            background: linear-gradient(135deg, #fdf2f8, #eff6ff);
+            min-height: 100vh;
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
-        /* Sidebar (same as admin) */
-        .sidebar {
-            width: 240px;
-            background: white;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-            padding: 20px;
+        .user-shell {
+            display: flex;
+            min-height: 100vh;
         }
 
-        .sidebar-item {
-            padding: 12px 16px;
-            border-radius: 14px;
+        /* SIDEBAR */
+        .user-sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2563eb, #22c1c3);
+            color: white;
+            padding: 22px 18px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .user-logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .user-nav {
+            flex: 1;
+        }
+
+        .user-nav-item {
+            padding: 10px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 6px;
             cursor: pointer;
             font-size: 15px;
         }
 
-        .sidebar-item:hover {
-            background: #f3f4f6;
+        .user-nav-item span.icon {
+            width: 20px;
+            text-align: center;
         }
 
-        .sidebar-active {
-            background: #e6f0ff;
+        .user-nav-item:hover {
+            background: rgba(255, 255, 255, 0.12);
         }
 
-        /* Content */
-        .content {
-            margin-left: 260px;
-            padding: 30px;
+        .user-nav-active {
+            background: rgba(255, 255, 255, 0.2);
         }
 
-        /* Card styles */
-        .dashboard-card {
-            background: white;
-            padding: 25px;
+        .user-sidebar-footer {
+            font-size: 12px;
+            opacity: 0.85;
+        }
+
+        /* MAIN CONTENT */
+        .user-main {
+            flex: 1;
+            padding: 22px 26px;
+        }
+
+        .top-banner {
+            background: linear-gradient(135deg, #ff80b5, #9089fc);
+            color: white;
+            padding: 26px 26px 22px;
+            border-radius: 22px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .top-banner h2 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .top-banner-sub {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .top-banner-next {
+            text-align: right;
+        }
+
+        .next-draw-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .next-draw-timer {
+            font-size: 14px;
+        }
+
+        /* STATS */
+        .stat-box {
             border-radius: 20px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, .07);
-            cursor: pointer;
-            transition: .2s;
+            padding: 18px 18px 14px;
+            background: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
         }
 
-        .dashboard-card:hover {
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-note {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* QUICK ACTIONS */
+        .action-btn {
+            border-radius: 14px;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+        }
+
+        /* DRAW CARDS */
+        .section-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .draw-card {
+            border-radius: 20px;
+            padding: 18px 20px;
+            background: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+            margin-bottom: 16px;
+            transition: 0.2s;
+        }
+
+        .draw-card:hover {
             transform: translateY(-3px);
         }
 
-        /* Banner (Luck / Congrats) */
-        .banner {
-            background: #dbeafe;
-            padding: 18px 20px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            font-size: 18px;
+        .draw-pill {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #3730a3;
             font-weight: 600;
         }
 
-        .banner-winner {
-            background: #bbf7d0;
-            color: #065f46;
+        .draw-meta {
+            font-size: 12px;
+            color: #6b7280;
         }
 
-        /* Modal */
-        .modal-card {
-            background: white;
-            padding: 25px;
+        .draw-actions .btn {
+            border-radius: 999px;
+            font-size: 13px;
+            padding: 6px 12px;
+        }
+
+        .badge-joined {
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 999px;
+            padding: 4px 9px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .filter-row .form-control,
+        .filter-row .form-select {
+            border-radius: 999px;
+        }
+
+        .empty-box {
+            padding: 26px;
             border-radius: 20px;
+            background: #f8fafc;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h4 class="mb-4">User Panel</h4>
+    <div class="toast-box" id="toast-box"></div>
 
-        <div class="sidebar-item sidebar-active">Dashboard</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/draws.html')">Available Draws</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/joined.html')">Joined Draws</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/winners.html')">Winners</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/history.html')">History</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/profile.html')">Profile</div>
-        <div class="sidebar-item" onclick="logoutUser()">Logout</div>
-    </div>
+    <div class="user-shell">
 
-    <div class="content">
+        <!-- SIDEBAR -->
+        <div class="user-sidebar">
+            <div class="user-logo">
+                <div class="user-logo-icon">🎯</div>
+                <div>User Panel</div>
+            </div>
 
-        <h2 id="headerName">Hey User 👋</h2>
-
-        <!-- Banner -->
-        <div id="bannerBox" class="banner">
-            🍀 Your luck is loading…
-        </div>
-
-        <!-- Dashboard Cards -->
-        <div class="row g-4 mt-2">
-
-            <!-- Available Draws -->
-            <div class="col-md-4">
-                <div class="dashboard-card" onclick="redirectTo('/user/draws.html')">
-                    <h5>Available Draws</h5>
-                    <p>Join active draws now.</p>
+            <div class="user-nav">
+                <div class="user-nav-item user-nav-active" onclick="redirectTo('/user/dashboard.html')">
+                    <span class="icon">🏠</span> <span>Dashboard</span>
+                </div>
+                <div class="user-nav-item" onclick="redirectTo('/user/draws.html')">
+                    <span class="icon">🎟</span> <span>Available Draws</span>
+                </div>
+                <div class="user-nav-item" onclick="redirectTo('/user/joined.html')">
+                    <span class="icon">📌</span> <span>Joined Draws</span>
+                </div>
+                <div class="user-nav-item" onclick="redirectTo('/user/winners.html')">
+                    <span class="icon">🏆</span> <span>My Wins</span>
+                </div>
+                <div class="user-nav-item" onclick="redirectTo('/user/history.html')">
+                    <span class="icon">🕑</span> <span>History</span>
+                </div>
+                <div class="user-nav-item" onclick="redirectTo('/user/profile.html')">
+                    <span class="icon">👤</span> <span>Profile</span>
+                </div>
+                <div class="user-nav-item" onclick="logoutUser()">
+                    <span class="icon">🚪</span> <span>Logout</span>
                 </div>
             </div>
 
-            <!-- Joined Draws -->
-            <div class="col-md-4">
-                <div class="dashboard-card" onclick="redirectTo('/user/joined.html')">
-                    <h5>Joined Draws</h5>
-                    <p>View your active & pending draws.</p>
+            <div class="user-sidebar-footer">
+                Good luck today! 🍀
+            </div>
+        </div>
+
+        <!-- MAIN -->
+        <div class="user-main">
+
+            <!-- HERO BANNER -->
+            <div class="top-banner">
+                <div>
+                    <h2 id="welcomeTitle">Welcome 🎉</h2>
+                    <div class="top-banner-sub" id="welcomeSubtitle">
+                        You have joined 0 draws and won 0 times.
+                    </div>
+                </div>
+                <div class="top-banner-next">
+                    <div class="small text-uppercase" style="letter-spacing: .05em; opacity: .85;">
+                        Your luck is loading for
+                    </div>
+                    <div class="next-draw-name" id="nextDrawName">No upcoming draw</div>
+                    <div class="next-draw-timer" id="nextDrawTimer"></div>
                 </div>
             </div>
 
-            <!-- Draw History -->
-            <div class="col-md-4">
-                <div class="dashboard-card" onclick="redirectTo('/user/history.html')">
-                    <h5>Draw History</h5>
-                    <p>Won & lost draws summary.</p>
+            <!-- STATS -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3 col-6">
+                    <div class="stat-box">
+                        <div class="stat-label">Joined Draws</div>
+                        <div class="stat-value" id="statJoinedValue">0</div>
+                        <div class="stat-note">Total draws you have joined</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-box">
+                        <div class="stat-label">Wins</div>
+                        <div class="stat-value" id="statWinsValue">0</div>
+                        <div class="stat-note">Lucky moments</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-box">
+                        <div class="stat-label">Active Draws</div>
+                        <div class="stat-value" id="statActiveValue">0</div>
+                        <div class="stat-note">Running right now</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-box">
+                        <div class="stat-label">Voucher</div>
+                        <div class="stat-value" id="statVoucherValue">-</div>
+                        <div class="stat-note">Special access code</div>
+                    </div>
                 </div>
             </div>
 
-        </div>
+            <!-- QUICK ACTIONS -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3 col-6">
+                    <button class="btn btn-dark action-btn w-100" onclick="redirectTo('/user/draws.html')">🎟 Join
+                        Draws</button>
+                </div>
+                <div class="col-md-3 col-6">
+                    <button class="btn btn-primary action-btn w-100" onclick="redirectTo('/user/winners.html')">🏆 My
+                        Wins</button>
+                </div>
+                <div class="col-md-3 col-6">
+                    <button class="btn btn-warning action-btn w-100" onclick="redirectTo('/user/joined.html')">📌 Joined
+                        Draws</button>
+                </div>
+                <div class="col-md-3 col-6">
+                    <button class="btn btn-secondary action-btn w-100" onclick="redirectTo('/user/profile.html')">👤
+                        Profile</button>
+                </div>
+            </div>
 
-        <!-- Most Recent Draws Section -->
-        <h4 class="mt-5 mb-3">Most Recent Draws</h4>
+            <!-- ACTIVE DRAWS SECTION -->
+            <div class="section-title-row">
+                <h4 class="mb-0">🔥 Active Draws For You</h4>
+                <div class="d-flex gap-2 filter-row">
+                    <input id="filterSearch" class="form-control form-control-sm" style="max-width: 230px;"
+                        placeholder="Search draws (name, prize)" oninput="renderDrawCards()">
+                    <input id="filterDate" class="form-control form-control-sm" style="max-width: 150px;" type="date"
+                        onchange="renderDrawCards()">
+                    <select id="filterMode" class="form-select form-select-sm" style="max-width: 160px;"
+                        onchange="renderDrawCards()">
+                        <option value="all">All Draws</option>
+                        <option value="joined">Joined Only</option>
+                        <option value="notJoined">Not Joined</option>
+                    </select>
+                </div>
+            </div>
 
-        <div id="recentDraws" class="row g-3"></div>
+            <div id="drawsContainer"></div>
 
-    </div>
+        </div> <!-- /user-main -->
+    </div> <!-- /user-shell -->
 
-    <!-- Win Modal -->
-    <div class="modal fade" id="winModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-card">
-                <h4 id="winDrawName">Winning Draw</h4>
-                <p id="winDrawPrize"></p>
-                <button class="btn btn-success w-100" onclick="redirectTo('/user/winners.html')">View Details</button>
+
+    <!-- DRAW DETAILS MODAL -->
+    <div class="modal fade" id="drawDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 18px;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailModalTitle">Draw Details</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detailModalBody">
+                    Loading...
+                </div>
             </div>
         </div>
     </div>
+
 
     <script src="/assets/js/common.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        window.onload = function () {
+        var userId = null;
+        var userName = null;
+        var userVoucher = null;
 
-            var userId = localStorage.getItem("userId");
+        var allActiveDraws = [];
+        var joinedDrawIds = {};
+        var nextDrawTimerInterval = null;
+
+        window.onload = function () {
+            initDashboard();
+        };
+
+        function initDashboard() {
+            try {
+                userId = localStorage.getItem("userId");
+                userName = localStorage.getItem("userName");
+                userVoucher = localStorage.getItem("userVoucher");
+            } catch (e) {
+                userId = null;
+            }
+
             if (!userId) {
                 redirectTo("/user/login.html");
                 return;
             }
 
-            loadUserProfile(userId);
-            loadRecentDraws();
-            checkTodayWinner(userId);
-        };
-
-        function loadUserProfile(uid) {
-            apiFetch("/users/" + uid + "/profile", "GET")
-                .then(function (json) {
-                    if (!json || !json.success) return;
-
-                    var u = json.data;
-                    document.getElementById("headerName").innerText = "Hey " + u.name + " 👋";
-                });
+            if (!userName || userName === "") {
+                loadUserProfileThenData();
+            } else {
+                document.getElementById("welcomeTitle").innerText = "Welcome, " + userName + " 🎉";
+                loadDashboardData();
+            }
         }
 
-        function loadRecentDraws() {
-            apiFetch("/draws/active?page=0&size=3", "GET")
+        function loadUserProfileThenData() {
+            apiFetch("/users/" + userId + "/profile", "GET")
                 .then(function (json) {
-
-                    if (!json || !json.success) return;
-
-                    var list = json.data.content;
-                    var box = document.getElementById("recentDraws");
-                    box.innerHTML = "";
-
-                    for (var i = 0; i < list.length; i++) {
-                        var d = list[i];
-
-                        var card =
-                            "<div class='col-md-4'>" +
-                            "<div class='dashboard-card' onclick=\"redirectTo('/user/draw-details.html?id=" + d.id + "')\">" +
-                            "<h5>" + d.name + "</h5>" +
-                            "<p>Prize: " + d.prizeType + "</p>" +
-                            "</div></div>";
-
-                        box.innerHTML += card;
+                    if (json && json.success && json.data) {
+                        var u = json.data;
+                        userName = u.name || u.username || "User";
+                        try {
+                            localStorage.setItem("userName", userName);
+                        } catch (e) { }
+                    } else {
+                        userName = "User";
                     }
+                    document.getElementById("welcomeTitle").innerText = "Welcome, " + userName + " 🎉";
+                    loadDashboardData();
+                })
+                .catch(function () {
+                    userName = "User";
+                    document.getElementById("welcomeTitle").innerText = "Welcome, " + userName + " 🎉";
+                    loadDashboardData();
                 });
         }
 
-        function checkTodayWinner(uid) {
+        // MAIN DASHBOARD DATA LOADER
+        function loadDashboardData() {
+            Promise.all([
+                apiFetch("/admins/participants/all", "GET"),       // we know this works and contains userId + drawId
+                apiFetch("/draws/active?page=0&size=200", "GET")
+            ]).then(function (results) {
+                var participantsRes = results[0];
+                var activeRes = results[1];
 
-            apiFetch("/users/" + uid + "/draws/won", "GET")
+                var allParticipantItems = [];
+                if (participantsRes && participantsRes.success && participantsRes.data && participantsRes.data instanceof Array) {
+                    allParticipantItems = participantsRes.data;
+                }
+
+                // Build joined list + joinedDrawIds + wins from participants
+                joinedDrawIds = {};
+                var joinedList = [];
+                var winsCount = 0;
+
+                var i;
+                for (i = 0; i < allParticipantItems.length; i++) {
+                    var p = allParticipantItems[i];
+                    if (!p) continue;
+                    if (String(p.userId) !== String(userId)) continue;
+
+                    joinedList.push(p);
+
+                    if (p.drawId !== null && p.drawId !== undefined) {
+                        joinedDrawIds[p.drawId] = true;
+                    }
+
+                    if (p.winner === true) {
+                        winsCount++;
+                    }
+                }
+
+                var joinedCount = joinedList.length;
+
+                // Active draws
+                var activeList = [];
+                if (activeRes && activeRes.success && activeRes.data && activeRes.data.content && activeRes.data.content instanceof Array) {
+                    activeList = activeRes.data.content;
+                }
+
+                document.getElementById("statJoinedValue").innerText = joinedCount;
+                document.getElementById("statWinsValue").innerText = winsCount;
+                document.getElementById("statActiveValue").innerText = activeList.length;
+                document.getElementById("statVoucherValue").innerText = userVoucher ? userVoucher : "-";
+
+                var subtitle = "You have joined " + joinedCount + " draw";
+                if (joinedCount !== 1) subtitle += "s";
+                subtitle += " and won " + winsCount + " time";
+                if (winsCount !== 1) subtitle += "s";
+                subtitle += ".";
+                document.getElementById("welcomeSubtitle").innerText = subtitle;
+
+                allActiveDraws = activeList;
+                setupNextDrawCountdown(allActiveDraws);
+                renderDrawCards();
+            }).catch(function () {
+                showToast("Failed to load dashboard data", false);
+            });
+        }
+
+        function setupNextDrawCountdown(draws) {
+            var nameEl = document.getElementById("nextDrawName");
+            var timerEl = document.getElementById("nextDrawTimer");
+
+            if (nextDrawTimerInterval) {
+                clearInterval(nextDrawTimerInterval);
+                nextDrawTimerInterval = null;
+            }
+
+            if (!draws || draws.length === 0) {
+                nameEl.innerText = "No upcoming draw";
+                timerEl.innerText = "";
+                return;
+            }
+
+            var next = null;
+            var i;
+            for (i = 0; i < draws.length; i++) {
+                var d = draws[i];
+                if (!d.endDate) continue;
+                var t = new Date(d.endDate);
+                if (isNaN(t.getTime())) continue;
+                if (!next) {
+                    next = d;
+                } else {
+                    var tNext = new Date(next.endDate);
+                    if (t < tNext) {
+                        next = d;
+                    }
+                }
+            }
+
+            if (!next) {
+                nameEl.innerText = "No upcoming draw";
+                timerEl.innerText = "";
+                return;
+            }
+
+            nameEl.innerText = next.name || "Draw";
+
+            var endTime = new Date(next.endDate);
+            if (isNaN(endTime.getTime())) {
+                timerEl.innerText = "";
+                return;
+            }
+
+            function updateTimer() {
+                var now = new Date();
+                var diff = endTime - now;
+                if (diff <= 0) {
+                    timerEl.innerText = "Ends now – fingers crossed!";
+                    clearInterval(nextDrawTimerInterval);
+                    nextDrawTimerInterval = null;
+                    return;
+                }
+                var seconds = Math.floor(diff / 1000);
+                var days = Math.floor(seconds / 86400);
+                var hours = Math.floor((seconds % 86400) / 3600);
+                var minutes = Math.floor((seconds % 3600) / 60);
+
+                var text = "";
+                if (days > 0) text += days + "d ";
+                if (hours < 10) text += "0";
+                text += hours + "h ";
+                if (minutes < 10) text += "0";
+                text += minutes + "m";
+
+                timerEl.innerText = "Closes in " + text;
+            }
+
+            updateTimer();
+            nextDrawTimerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function renderDrawCards() {
+            var container = document.getElementById("drawsContainer");
+            container.innerHTML = "";
+
+            if (!allActiveDraws || allActiveDraws.length === 0) {
+                container.innerHTML = "<div class='empty-box'>No draws available at the moment.</div>";
+                return;
+            }
+
+            var search = document.getElementById("filterSearch").value.toLowerCase();
+            var mode = document.getElementById("filterMode").value;
+            var dateVal = document.getElementById("filterDate").value;
+
+            var visibleCount = 0;
+            var i;
+
+            for (i = 0; i < allActiveDraws.length; i++) {
+                var d = allActiveDraws[i];
+                var drawId = d.id;
+
+                var isJoined = joinedDrawIds[drawId] === true;
+
+                if (mode === "joined" && !isJoined) continue;
+                if (mode === "notJoined" && isJoined) continue;
+
+                if (dateVal && d.startDate) {
+                    var startDateStr = String(d.startDate).substring(0, 10);
+                    if (startDateStr !== dateVal) continue;
+                }
+
+                var combined = (
+                    (d.name || "") + " " +
+                    (d.prize || "") + " " +
+                    (d.description || "")
+                ).toLowerCase();
+
+                if (search && combined.indexOf(search) === -1) continue;
+
+                visibleCount++;
+
+                var prizeText = d.prize || "-";
+                var accessText = d.voucherAccessLevel || d.accessLevel || "ALL";
+
+                var startPretty = formatDateTime(d.startDate);
+                var endPretty = formatDateTime(d.endDate);
+
+                var joinBtnHtml;
+                if (isJoined) {
+                    joinBtnHtml =
+                        "<span id='joinBtn_" + drawId + "' class='badge-joined me-2'>Joined</span>";
+                } else {
+                    joinBtnHtml =
+                        "<button id='joinBtn_" + drawId +
+                        "' class='btn btn-dark btn-sm me-2' onclick='joinDrawFromDashboard(" + drawId + ")'>Join Now</button>";
+                }
+
+                joinBtnHtml += "<button class='btn btn-outline-secondary btn-sm' onclick='openDrawDetails(" + drawId + ")'>Details</button>";
+
+                var card = document.createElement("div");
+                card.className = "draw-card";
+
+                card.innerHTML =
+                    "<div class='d-flex justify-content-between align-items-start'>" +
+                    "  <div>" +
+                    "    <h5 class='mb-1'>" + escapeHtml(d.name || "Draw") + "</h5>" +
+                    "    <div class='draw-meta mb-1'>Prize: <strong>" + escapeHtml(prizeText) + "</strong></div>" +
+                    "    <div class='draw-meta mb-1'>Start: " + startPretty + "</div>" +
+                    "    <div class='draw-meta'>End: " + endPretty + "</div>" +
+                    "  </div>" +
+                    "  <div class='text-end draw-actions'>" +
+                    "    <div class='mb-2'><span class='draw-pill'>Access: " + escapeHtml(accessText) + "</span></div>" +
+                    joinBtnHtml +
+                    "  </div>" +
+                    "</div>";
+
+                container.appendChild(card);
+            }
+
+            if (visibleCount === 0) {
+                container.innerHTML = "<div class='empty-box'>No draws match your filters.</div>";
+            }
+        }
+
+        function joinDrawFromDashboard(drawId) {
+            if (!userId) {
+                showToast("Please login first", false);
+                redirectTo("/user/login.html");
+                return;
+            }
+
+            var body = {
+                userId: Number(userId),
+                voucherCode: null,
+                accountDetailsJson: "{}"
+            };
+
+            apiFetch("/draws/" + drawId + "/join", "POST", body)
                 .then(function (json) {
+                    if (!json) {
+                        showToast("Failed to join draw", false);
+                        return;
+                    }
 
-                    if (!json || !json.success) return;
+                    var msg = json.message ? String(json.message) : "";
 
-                    var wins = json.data.content;
-                    if (wins.length === 0) return;
+                    if (!json.success) {
+                        var lower = msg.toLowerCase();
+                        if (lower.indexOf("already") !== -1) {
+                            showToast(msg, true);
+                            markDrawAsJoined(drawId);
+                            return;
+                        }
+                        showToast(msg || "Failed to join draw", false);
+                        return;
+                    }
 
-                    // Show congrats banner
-                    var b = document.getElementById("bannerBox");
-                    b.classList.add("banner-winner");
-                    b.innerText = "🎉 Congratulations! You won a draw today!";
-
-                    // Fill modal
-                    var win = wins[0];
-                    document.getElementById("winDrawName").innerText = win.name;
-                    document.getElementById("winDrawPrize").innerText =
-                        win.prizeAmount ? "Cash Prize: " + win.prizeAmount : "Voucher: " + win.voucherCode;
-
-                    // Auto-show button
+                    showToast("Successfully joined draw!", true);
+                    markDrawAsJoined(drawId);
+                })
+                .catch(function () {
+                    showToast("Failed to join draw", false);
                 });
         }
 
-        function redirectTo(url) { window.location.href = url; }
+        function markDrawAsJoined(drawId) {
+            joinedDrawIds[drawId] = true;
+
+            var btn = document.getElementById("joinBtn_" + drawId);
+            if (btn) {
+                btn.outerHTML = "<span id='joinBtn_" + drawId + "' class='badge-joined me-2'>Joined</span>";
+            }
+
+            loadDashboardData();
+        }
+
+        function openDrawDetails(drawId) {
+            apiFetch("/draws/" + drawId, "GET")
+                .then(function (json) {
+                    if (!json || !json.success || !json.data) {
+                        showToast("Failed to load draw details", false);
+                        return;
+                    }
+
+                    var d = json.data;
+                    document.getElementById("detailModalTitle").innerText = d.name || "Draw Details";
+
+                    var prize = d.prize || "-";
+                    var voucher = d.voucherCode || "-";
+                    var access = d.voucherAccessLevel || d.accessLevel || "ALL";
+                    var department = d.department || "-";
+                    var maxWinners = (d.maxWinners !== null && d.maxWinners !== undefined) ? d.maxWinners : "-";
+                    var description = d.description || "-";
+                    var startStr = formatDateTime(d.startDate);
+                    var endStr = formatDateTime(d.endDate);
+
+                    var html =
+                        "<div class='row mb-2'>" +
+                        "  <div class='col-md-6'><b>Prize:</b> " + escapeHtml(prize) + "</div>" +
+                        "  <div class='col-md-6'><b>Voucher Code:</b> " + escapeHtml(voucher) + "</div>" +
+                        "</div>" +
+                        "<div class='row mb-2'>" +
+                        "  <div class='col-md-6'><b>Access Level:</b> " + escapeHtml(access) + "</div>" +
+                        "  <div class='col-md-6'><b>Max Winners:</b> " + escapeHtml(maxWinners) + "</div>" +
+                        "</div>" +
+                        "<div class='row mb-2'>" +
+                        "  <div class='col-md-6'><b>Department:</b> " + escapeHtml(department) + "</div>" +
+                        "  <div class='col-md-6'><b>Total Participants:</b> " + escapeHtml(d.totalParticipants || "0") + "</div>" +
+                        "</div>" +
+                        "<div class='mb-2'><b>Description:</b><br>" + escapeHtml(description) + "</div>" +
+                        "<div class='row mt-2'>" +
+                        "  <div class='col-md-6'><b>Start:</b> " + startStr + "</div>" +
+                        "  <div class='col-md-6'><b>End:</b> " + endStr + "</div>" +
+                        "</div>";
+
+                    document.getElementById("detailModalBody").innerHTML = html;
+
+                    var modal = new bootstrap.Modal(document.getElementById("drawDetailModal"));
+                    modal.show();
+                });
+        }
+
+        function formatDateTime(iso) {
+            if (!iso) return "-";
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return iso;
+
+            var day = d.getDate();
+            if (day < 10) day = "0" + day;
+
+            var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            var month = monthNames[d.getMonth()];
+            var year = d.getFullYear();
+
+            var hours = d.getHours();
+            var minutes = d.getMinutes();
+            var ampm = hours >= 12 ? "PM" : "AM";
+            hours = hours % 12;
+            if (hours === 0) hours = 12;
+            if (minutes < 10) minutes = "0" + minutes;
+
+            return day + " " + month + " " + year + ", " + hours + ":" + minutes + " " + ampm;
+        }
+
+        function escapeHtml(s) {
+            if (s === undefined || s === null) return "";
+            return String(s)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+        }
 
         function logoutUser() {
-            localStorage.removeItem("userId");
-            redirectTo('/user/login.html');
+            try {
+                localStorage.removeItem("userId");
+                localStorage.removeItem("userName");
+                localStorage.removeItem("userEmail");
+                localStorage.removeItem("userPhone");
+                localStorage.removeItem("userDepartment");
+                localStorage.removeItem("userGuest");
+                localStorage.removeItem("userVoucher");
+            } catch (e) { }
+            redirectTo("/user/login.html");
         }
 
+        function redirectTo(url) {
+            window.location.href = url;
+        }
     </script>
 
 </body>

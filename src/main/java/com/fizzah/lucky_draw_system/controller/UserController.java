@@ -9,6 +9,9 @@ import com.fizzah.lucky_draw_system.entity.User;
 import com.fizzah.lucky_draw_system.service.ExportService;
 import com.fizzah.lucky_draw_system.service.UserService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -108,6 +111,30 @@ public class UserController {
                 .contentType(format.equalsIgnoreCase("pdf") ? MediaType.APPLICATION_PDF : MediaType.TEXT_PLAIN)
                 .body(resource);
     }
+
+    // -------------------------------
+// GET ALL USERS
+// -------------------------------
+@GetMapping("/all")
+public ApiResponse<?> getAllUsers() {
+
+    List<User> list = userService.findAllUsers();
+
+    List<UserResponse> resp = list.stream().map(u ->
+            UserResponse.builder()
+                    .id(u.getId())
+                    .name(u.getName())
+                    .email(u.getEmail())
+                    .username(u.getUsername())
+                    .phone(u.getPhone())
+                    .department(u.getDepartment())
+                    .guest(u.isGuest())
+                    .build()
+    ).toList();
+
+    return ApiResponse.success(resp);
+}
+
 
     @PostMapping("/guest")
 public ApiResponse<UserResponse> guestAccess(@RequestBody UserGuestRequest req) {

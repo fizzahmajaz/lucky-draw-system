@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Create Draw</title>
+    <title>Edit Draw</title>
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
@@ -12,29 +12,9 @@
     <link rel="stylesheet" href="/assets/css/style.css">
 
     <style>
-        .sidebar {
-            width: 240px;
-            background: white;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-            padding: 20px;
-        }
-
-        .sidebar-item {
-            padding: 12px 15px;
-            border-radius: 14px;
-            cursor: pointer;
-            margin-bottom: 6px;
-        }
-
-        .sidebar-item:hover { background: #f3f4f6; }
-        .sidebar-active { background: #fbe6ff; }
 
         .content {
-            margin-left: 260px;
+            margin: auto;
             padding: 30px;
         }
 
@@ -71,33 +51,25 @@
 
 <body>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h4 class="mb-4">Admin Panel</h4>
 
-        <div class="sidebar-item" onclick="redirectTo('/admin/dashboard.html')">Dashboard</div>
-        <div class="sidebar-item sidebar-active">Create Draw</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/view-draws.html')">View Draws</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/participants.html')">Participants</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/winners.html')">Winners</div>
-        <div class="sidebar-item" onclick="redirectTo('/admin/login.html')">Logout</div>
-    </div>
+    <!-- Toast container (if not already in layout) -->
+    <div id="toast-box" class="toast-box"></div>
 
     <!-- Main Content -->
     <div class="content">
-        <h2 class="mb-4" style="font-weight:800;">Create New Draw</h2>
+        <h2 class="mb-4">Edit Draw</h2>
 
         <div class="card-apple">
 
-            <form onsubmit="createDraw(event)">
+            <form onsubmit="saveDraw(event)">
 
                 <!-- Draw Name -->
                 <label>Draw Name</label>
                 <input type="text" id="name" class="form-control mb-3">
 
-                <!-- Prize -->
-                <label>Prize (Write anything: Win 2 Lakh, Win iPhone)</label>
-                <input type="text" id="prize" class="form-control mb-3" placeholder="Example: Win iPhone 16 Pro">
+                <!-- Prize (READ ONLY) -->
+                <label>Prize (not editable)</label>
+                <input type="text" id="prize" class="form-control mb-3" readonly>
 
                 <!-- Voucher Access -->
                 <label>Voucher Code (For visibility control)</label>
@@ -145,7 +117,10 @@
                 <label>Description</label>
                 <textarea id="description" class="form-control mb-4" placeholder="Optional details"></textarea>
 
-                <button class="btn-apple" type="submit">Create Draw</button>
+                <div class="d-flex gap-2">
+                    <button class="btn-apple" type="submit">Save Changes</button>
+                    <button class="btn btn-outline-secondary" type="button" onclick="goBack()">Cancel</button>
+                </div>
             </form>
 
         </div>
@@ -154,7 +129,113 @@
     <script src="/assets/js/common.js"></script>
 
     <script>
-        function createDraw(event) {
+        var currentDrawId = null;
+
+        // Convert backend date to input type="datetime-local"
+        function formatForInput(value) {
+            if (!value) return "";
+            var d = new Date(value);
+            if (isNaN(d.getTime())) {
+                return value; // if backend already gives 2025-11-20T23:59:00
+            }
+            var year = d.getFullYear();
+            var month = d.getMonth() + 1;
+            var day = d.getDate();
+            var hours = d.getHours();
+            var minutes = d.getMinutes();
+
+            if (month < 10) month = "0" + month;
+            if (day < 10) day = "0" + day;
+            if (hours < 10) hours = "0" + hours;
+            if (minutes < 10) minutes = "0" + minutes;
+
+            return year + "-" + month + "-" + day + "T" + hours + ":" + minutes;
+        }
+
+        function goBack() {
+            redirectTo("/admin/view-draws.html");
+        }
+
+        window.onload = function () {
+            var adminId = localStorage.getItem("adminId");
+            if (!adminId) {
+                redirectTo("/admin/login.html");
+                return;
+            }
+
+            var params = new URLSearchParams(window.location.search);
+            var idParam = params.get("id");
+            if (!idParam) {
+                showToast("No draw selected to edit", false);
+                return;
+            }
+
+            currentDrawId = idParam;
+            loadDraw();
+        };
+
+        function loadDraw() {
+            apiFetch("/draws/" + currentDrawId, "GET")
+                .then(function (json) {
+                    if (!json || !json.success) {
+                        showToast("Failed to load draw details", false);
+                        return;
+                    }
+
+                    var d = json.data;
+
+                    // Name
+                    var nameEl = document.getElementById("name");
+                    if (nameEl) nameEl.value = d.name ? d.name : "";
+
+                    // Prize (read-only)
+                    var prizeEl = document.getElementById("prize");
+                    if (prizeEl) prizeEl.value = d.prize ? d.prize : "";
+
+                    // Access voucher & level
+                    var vCodeEl = document.getElementById("accessVoucher");
+                    if (vCodeEl) vCodeEl.value = d.voucherCode ? d.voucherCode : "";
+
+                    var vLevelEl = document.getElementById("voucherAccessLevel");
+                    if (vLevelEl) vLevelEl.value = d.voucherAccessLevel ? d.voucherAccessLevel : "ALL";
+
+                    // Dates
+                    var startEl = document.getElementById("startDate");
+                    if (startEl) startEl.value = formatForInput(d.startDate);
+
+                    var endEl = document.getElementById("endDate");
+                    if (endEl) endEl.value = formatForInput(d.endDate);
+
+                    // Department
+                    var depEl = document.getElementById("department");
+                    if (depEl) depEl.value = d.department ? d.department : "";
+
+                    // Timer -> split into H/M/S
+                    var totalSeconds = d.timerSeconds !== undefined && d.timerSeconds !== null ? d.timerSeconds : 0;
+                    var hours = Math.floor(totalSeconds / 3600);
+                    var remainder = totalSeconds % 3600;
+                    var minutes = Math.floor(remainder / 60);
+                    var seconds = remainder % 60;
+
+                    var hEl = document.getElementById("timerHours");
+                    var mEl = document.getElementById("timerMinutes");
+                    var sEl = document.getElementById("timerSeconds");
+
+                    if (hEl) hEl.value = hours;
+                    if (mEl) mEl.value = minutes;
+                    if (sEl) sEl.value = seconds;
+
+                    // Max Winners
+                    var mwEl = document.getElementById("maxWinners");
+                    if (mwEl) mwEl.value = (d.maxWinners !== undefined && d.maxWinners !== null) ? d.maxWinners : "";
+
+                    // Description
+                    var descEl = document.getElementById("description");
+                    if (descEl) descEl.value = d.description ? d.description : "";
+                });
+        }
+
+        function saveDraw(event) {
             event.preventDefault();
 
             var adminId = localStorage.getItem("adminId");
@@ -163,7 +244,11 @@
                 return;
             }
 
-            // Timer fields
+            if (!currentDrawId) {
+                showToast("No draw selected", false);
+                return;
+            }
+
             var h = parseInt(document.getElementById("timerHours").value, 10);
             var m = parseInt(document.getElementById("timerMinutes").value, 10);
             var s = parseInt(document.getElementById("timerSeconds").value, 10);
@@ -177,7 +262,7 @@
             var totalSeconds = (h * 3600) + (m * 60) + s;
 
             var name = document.getElementById("name").value.trim();
-            var prize = document.getElementById("prize").value.trim();
+            var prize = document.getElementById("prize").value.trim(); // not editable but still sent
             var accessVoucher = document.getElementById("accessVoucher").value.trim();
             var voucherAccessLevel = document.getElementById("voucherAccessLevel").value;
             var startDate = document.getElementById("startDate").value;
@@ -186,12 +271,12 @@
             var maxWinners = document.getElementById("maxWinners").value;
             var description = document.getElementById("description").value;
 
-            if (!name || !prize || !startDate || !endDate) {
-                showToast("Please fill Draw Name, Prize, Start & End Date", false);
+            if (!name) {
+                showToast("Draw name is required", false);
                 return;
             }
-            if (!voucherAccessLevel) {
-                showToast("Please select Access Level", false);
+            if (!startDate || !endDate) {
+                showToast("Start and End date are required", false);
                 return;
             }
             if (totalSeconds <= 0) {
@@ -199,14 +284,13 @@
                 return;
             }
             if (!maxWinners || Number(maxWinners) <= 0) {
-                showToast("Please enter Max Winners", false);
+                showToast("Max Winners must be > 0", false);
                 return;
             }
 
-            // Final payload
             var body = {
                 name: name,
-                prize: prize,
+                prize: prize, // kept same as backend field from create page
                 voucherCode: accessVoucher || null,
                 voucherAccessLevel: voucherAccessLevel,
                 startDate: startDate,
@@ -217,14 +301,16 @@
                 maxWinners: Number(maxWinners)
             };
 
-            apiFetch("/draws?adminId=" + adminId, "POST", body)
-                .then(function(json) {
+            var url = "/draws/" + currentDrawId + "?adminId=" + adminId;
+
+            apiFetch(url, "PUT", body)
+                .then(function (json) {
                     if (!json || !json.success) {
-                        showToast((json && json.message) ? json.message : "Failed to create draw", false);
+                        showToast((json && json.message) ? json.message : "Failed to update draw", false);
                         return;
                     }
 
-                    showToast("Draw created successfully!", true);
+                    showToast("Draw updated successfully!", true);
 
                     setTimeout(function () {
                         redirectTo("/admin/view-draws.html");

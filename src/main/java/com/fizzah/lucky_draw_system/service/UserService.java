@@ -1,9 +1,12 @@
 package com.fizzah.lucky_draw_system.service;
 
+import java.util.List;
+
 import com.fizzah.lucky_draw_system.dto.request.UserGuestRequest;
 import com.fizzah.lucky_draw_system.dto.request.UserLoginRequest;
 import com.fizzah.lucky_draw_system.dto.request.UserRegisterRequest;
 import com.fizzah.lucky_draw_system.entity.User;
+
 
 public interface UserService {
 
@@ -18,4 +21,7 @@ public interface UserService {
     User findByUsername(String username);
 
     User createGuest(UserGuestRequest req);
+
+    List<User> findAllUsers();
+
 }

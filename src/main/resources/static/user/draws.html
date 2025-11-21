@@ -10,297 +10,763 @@
 
     <style>
         body {
-            background: #f1f5f9;
+            background: linear-gradient(135deg, #fdf2f8, #eff6ff);
+            min-height: 100vh;
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
-        /* Sidebar (same as dashboard) */
-        .sidebar {
-            width: 240px;
-            background: white;
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            padding: 20px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+        .user-shell {
+            display: flex;
+            min-height: 100vh;
         }
 
-        .sidebar-item {
-            padding: 12px 16px;
+        /* SIDEBAR (same as dashboard) */
+        .user-sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #2563eb, #22c1c3);
+            color: white;
+            padding: 22px 18px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .user-logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .user-nav {
+            flex: 1;
+        }
+
+        .user-nav-item {
+            padding: 10px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 6px;
-            border-radius: 14px;
             cursor: pointer;
+            font-size: 15px;
         }
 
-        .sidebar-item:hover {
-            background: #f3f4f6;
+        .user-nav-item span.icon {
+            width: 20px;
+            text-align: center;
         }
 
-        .sidebar-active {
-            background: #e6f0ff;
+        .user-nav-item:hover {
+            background: rgba(255, 255, 255, 0.12);
         }
 
-        .content {
-            margin-left: 260px;
-            padding: 30px;
+        .user-nav-active {
+            background: rgba(255, 255, 255, 0.2);
         }
 
-        /* Draw Cards */
-        .draw-card {
+        .user-sidebar-footer {
+            font-size: 12px;
+            opacity: 0.85;
+        }
+
+        /* MAIN */
+        .user-main {
+            flex: 1;
+            padding: 22px 26px;
+        }
+
+        .page-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 18px;
+        }
+
+        .page-title-row h3 {
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .stat-box {
+            border-radius: 20px;
+            padding: 16px 18px;
             background: white;
-            padding: 20px;
-            border-radius: 18px;
-            box-shadow: 0 5px 18px rgba(0, 0, 0, .08);
-            transition: .2s;
-            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .filter-row .form-control,
+        .filter-row .form-select {
+            border-radius: 999px;
+        }
+
+        .draw-card {
+            border-radius: 20px;
+            padding: 18px 20px;
+            background: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+            margin-bottom: 14px;
+            transition: 0.2s;
         }
 
         .draw-card:hover {
             transform: translateY(-3px);
         }
 
-        .draw-ended {
-            opacity: 0.5;
-            background: #f8fafc;
-        }
-
-        .draw-won {
-            border-left: 6px solid #16a34a;
-            background: #ecfdf5;
-            box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3);
-        }
-
-        .badge-cash {
-            background: #e0e7ff;
+        .draw-pill {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #eef2ff;
             color: #3730a3;
+            font-weight: 600;
         }
 
-        .badge-voucher {
-            background: #fce7f3;
-            color: #be185d;
+        .badge-joined {
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 999px;
+            padding: 4px 9px;
+            font-size: 11px;
+            font-weight: 600;
         }
 
-        /* Modal */
-        .modal-card {
-            background: white;
-            padding: 25px;
+        .badge-ending-soon {
+            background: #fef3c7;
+            color: #92400e;
+            border-radius: 999px;
+            padding: 4px 9px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .draw-meta {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .empty-box {
+            padding: 26px;
             border-radius: 20px;
+            background: #f8fafc;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h4 class="mb-4">User Panel</h4>
+<div class="toast-box" id="toast-box"></div>
 
-        <div class="sidebar-item" onclick="redirectTo('/user/dashboard.html')">Dashboard</div>
-        <div class="sidebar-item sidebar-active">Available Draws</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/joined.html')">Joined Draws</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/winners.html')">Winners</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/history.html')">History</div>
-        <div class="sidebar-item" onclick="redirectTo('/user/profile.html')">Profile</div>
-        <div class="sidebar-item" onclick="logoutUser()">Logout</div>
-    </div>
+<div class="user-shell">
 
-    <!-- Content -->
-    <div class="content">
+    <!-- SIDEBAR -->
+    <div class="user-sidebar">
+        <div class="user-logo">
+            <div class="user-logo-icon">🎯</div>
+            <div>User Panel</div>
+        </div>
 
-        <h2 class="mb-4">Available Draws</h2>
-
-        <!-- Filters -->
-        <div class="card-apple mb-4 p-3">
-            <div class="row g-3">
-
-                <div class="col-md-3">
-                    <select id="filterType" class="form-control" onchange="applyFilters()">
-                        <option value="">All Types</option>
-                        <option value="CASH">Cash Prize</option>
-                        <option value="VOUCHER">Voucher Prize</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <select id="filterSort" class="form-control" onchange="applyFilters()">
-                        <option value="recent">Most Recent</option>
-                        <option value="old">Oldest First</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3 text-end">
-                    <button class="btn btn-dark" onclick="exportCsv()">CSV</button>
-                </div>
-
-                <div class="col-md-3 text-end">
-                    <button class="btn btn-danger" onclick="exportPdf()">PDF</button>
-                </div>
-
+        <div class="user-nav">
+            <div class="user-nav-item" onclick="redirectTo('/user/dashboard.html')">
+                <span class="icon">🏠</span> <span>Dashboard</span>
+            </div>
+            <div class="user-nav-item user-nav-active" onclick="redirectTo('/user/draws.html')">
+                <span class="icon">🎟</span> <span>Available Draws</span>
+            </div>
+            <div class="user-nav-item" onclick="redirectTo('/user/joined.html')">
+                <span class="icon">📌</span> <span>Joined Draws</span>
+            </div>
+            <div class="user-nav-item" onclick="redirectTo('/user/winners.html')">
+                <span class="icon">🏆</span> <span>My Wins</span>
+            </div>
+            <div class="user-nav-item" onclick="redirectTo('/user/history.html')">
+                <span class="icon">🕑</span> <span>History</span>
+            </div>
+            <div class="user-nav-item" onclick="redirectTo('/user/profile.html')">
+                <span class="icon">👤</span> <span>Profile</span>
+            </div>
+            <div class="user-nav-item" onclick="logoutUser()">
+                <span class="icon">🚪</span> <span>Logout</span>
             </div>
         </div>
 
-        <!-- Draws List -->
-        <div id="drawBox" class="row g-3"></div>
-
-        <!-- Load More -->
-        <div class="text-center mt-4">
-            <button class="btn btn-outline-primary" onclick="loadMore()">Load More</button>
+        <div class="user-sidebar-footer">
+            Pick your luck wisely ✨
         </div>
-
     </div>
 
-    <!-- Join Modal -->
-    <div class="modal fade" id="joinModal">
-        <div class="modal-dialog">
-            <div class="modal-card">
-                <h4 id="joinDrawTitle">Join Draw</h4>
+    <!-- MAIN -->
+    <div class="user-main">
 
-                <div class="mb-3">
-                    <label>Voucher Code (if required)</label>
-                    <input id="joinVoucher" class="form-control" placeholder="Enter voucher code">
+        <div class="page-title-row">
+            <div>
+                <h3>Available Draws</h3>
+                <div class="subtitle">Join running draws and track your luck in real-time.</div>
+            </div>
+            <div class="text-end">
+                <div class="subtitle">Logged in as</div>
+                <div id="userNameDisplay" style="font-weight:600;">User</div>
+            </div>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-3 col-6">
+                <div class="stat-box">
+                    <div class="stat-label">Available</div>
+                    <div class="stat-value" id="statAvailable">0</div>
                 </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-box">
+                    <div class="stat-label">Joined</div>
+                    <div class="stat-value" id="statJoined">0</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-box">
+                    <div class="stat-label">Ending Soon</div>
+                    <div class="stat-value" id="statEndingSoon">0</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-box">
+                    <div class="stat-label">Your Voucher</div>
+                    <div class="stat-value" id="statVoucher">-</div>
+                </div>
+            </div>
+        </div>
 
-                <button class="btn btn-success w-100" onclick="confirmJoin()">Join Now</button>
+        <!-- FILTERS -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 filter-row">
+            <div class="d-flex flex-wrap gap-2">
+                <input id="filterSearch" class="form-control form-control-sm" style="max-width:220px;"
+                       placeholder="Search (name, prize, voucher)" oninput="renderDrawCards()">
+
+                <select id="filterPrizeType" class="form-select form-select-sm" style="max-width:140px;"
+                        onchange="renderDrawCards()">
+                    <option value="">Prize type</option>
+                    <option value="CASH">Cash Only</option>
+                    <option value="VOUCHER">Voucher Only</option>
+                </select>
+
+                <select id="filterJoinState" class="form-select form-select-sm" style="max-width:150px;"
+                        onchange="renderDrawCards()">
+                    <option value="all">All</option>
+                    <option value="joined">Joined</option>
+                    <option value="notJoined">Not Joined</option>
+                </select>
+
+                <input id="filterDate" type="date" class="form-control form-control-sm"
+                       style="max-width:150px;" onchange="renderDrawCards()">
+            </div>
+        </div>
+
+        <!-- DRAW CARDS -->
+        <div id="drawsContainer"></div>
+
+    </div> <!-- /user-main -->
+</div> <!-- /user-shell -->
+
+
+<!-- DETAILS MODAL -->
+<div class="modal fade" id="drawDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius:18px;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalTitle">Draw Details</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailModalBody">
+                Loading...
             </div>
         </div>
     </div>
+</div>
 
-    <script src="/assets/js/common.js"></script>
+<!-- VOUCHER JOIN MODAL (for SPECIFIC access draws) -->
+<div class="modal fade" id="joinVoucherModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:18px;">
+            <div class="modal-header">
+                <h5 class="modal-title">Join with Access Voucher</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">This draw is restricted. Enter your access voucher code.</p>
+                <input id="joinVoucherInput" class="form-control" placeholder="Enter voucher code">
+                <input type="hidden" id="joinDrawIdHidden">
+                <input type="hidden" id="joinExpectedVoucherHidden">
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmJoinWithVoucher()">Join Draw</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <script>
-        var userId = localStorage.getItem("userId");
-        var currentPage = 0;
-        var allDraws = [];
+<script src="/assets/js/common.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-        if (!userId) redirectTo("/user/login.html");
+<script>
+    var userId = null;
+    var userName = null;
+    var userVoucher = null;
 
-        window.onload = function () {
-            loadDraws();
+    var allActiveDraws = [];
+    var joinedDrawIds = {};
+    var endingSoonCount = 0;
+
+    window.onload = function () {
+        initAvailableDrawsPage();
+    };
+
+    function initAvailableDrawsPage() {
+        try {
+            userId = localStorage.getItem("userId");
+            userName = localStorage.getItem("userName");
+            userVoucher = localStorage.getItem("userVoucher");
+        } catch (e) {
+            userId = null;
+        }
+
+        if (!userId) {
+            redirectTo("/user/login.html");
+            return;
+        }
+
+        if (!userName || userName === "") userName = "User";
+        document.getElementById("userNameDisplay").innerText = userName;
+
+        if (userVoucher && userVoucher !== "") {
+            document.getElementById("statVoucher").innerText = userVoucher;
+        } else {
+            document.getElementById("statVoucher").innerText = "-";
+        }
+
+        loadData();
+    }
+
+    function loadData() {
+        Promise.all([
+            apiFetch("/users/" + userId + "/draws/joined", "GET"),
+            apiFetch("/draws/active?page=0&size=200", "GET")
+        ]).then(function (results) {
+
+            var joinedRes = results[0];
+            var activeRes = results[1];
+
+            // Joined map
+            joinedDrawIds = {};
+            var joinedList = [];
+            if (joinedRes && joinedRes.success && joinedRes.data) {
+                if (joinedRes.data instanceof Array) {
+                    joinedList = joinedRes.data;
+                } else if (joinedRes.data.content && joinedRes.data.content instanceof Array) {
+                    joinedList = joinedRes.data.content;
+                }
+            }
+            var i;
+            for (i = 0; i < joinedList.length; i++) {
+                var it = joinedList[i];
+                if (!it) continue;
+                var dId = null;
+                if (it.drawId !== undefined && it.drawId !== null) {
+                    dId = it.drawId;
+                } else if (it.draw && it.draw.id !== undefined && it.draw.id !== null) {
+                    dId = it.draw.id;
+                } else if (it.id !== undefined && it.id !== null) {
+                    dId = it.id;
+                }
+                if (dId !== null) joinedDrawIds[dId] = true;
+            }
+
+            // Active draws
+            allActiveDraws = [];
+            if (activeRes && activeRes.success && activeRes.data && activeRes.data.content) {
+                allActiveDraws = activeRes.data.content;
+            }
+
+            // Sort by ending soon
+            allActiveDraws.sort(function (a, b) {
+                var t1 = a.endDate ? new Date(a.endDate).getTime() : 9999999999999;
+                var t2 = b.endDate ? new Date(b.endDate).getTime() : 9999999999999;
+                return t1 - t2;
+            });
+
+            // Stats
+            document.getElementById("statAvailable").innerText = allActiveDraws.length;
+            document.getElementById("statJoined").innerText = Object.keys(joinedDrawIds).length;
+
+            endingSoonCount = 0;
+            var now = new Date().getTime();
+            var soonWindowMs = 24 * 60 * 60 * 1000;
+            for (i = 0; i < allActiveDraws.length; i++) {
+                var d = allActiveDraws[i];
+                if (d.endDate) {
+                    var t = new Date(d.endDate).getTime();
+                    if (!isNaN(t) && t > now && (t - now) <= soonWindowMs) {
+                        endingSoonCount++;
+                    }
+                }
+            }
+            document.getElementById("statEndingSoon").innerText = endingSoonCount;
+
+            renderDrawCards();
+        }).catch(function () {
+            showToast("Failed to load draws", false);
+        });
+    }
+
+    function renderDrawCards() {
+        var container = document.getElementById("drawsContainer");
+        container.innerHTML = "";
+
+        if (!allActiveDraws || allActiveDraws.length === 0) {
+            container.innerHTML = "<div class='empty-box'>No active draws available at the moment.</div>";
+            return;
+        }
+
+        var search = document.getElementById("filterSearch").value.toLowerCase();
+        var prizeType = document.getElementById("filterPrizeType").value;
+        var joinState = document.getElementById("filterJoinState").value;
+        var dateVal = document.getElementById("filterDate").value;
+
+        var visible = 0;
+        var i;
+
+        for (i = 0; i < allActiveDraws.length; i++) {
+            var d = allActiveDraws[i];
+
+            var isJoined = joinedDrawIds[d.id] === true;
+
+            if (joinState === "joined" && !isJoined) continue;
+            if (joinState === "notJoined" && isJoined) continue;
+
+            if (prizeType && d.prizeType && d.prizeType !== prizeType) continue;
+
+            if (dateVal && d.startDate) {
+                var startDateOnly = String(d.startDate).substring(0, 10);
+                if (startDateOnly !== dateVal) continue;
+            }
+
+            var combined = ((d.name || "") + " " +
+                (d.prizeType || "") + " " +
+                (d.prizeAmount || "") + " " +
+                (d.voucherCode || "") + " " +
+                (d.description || "")).toLowerCase();
+
+            if (search && combined.indexOf(search) === -1) continue;
+
+            visible++;
+
+            var prizeText;
+            if (d.prizeType === "CASH") {
+                prizeText = "Cash • " + (d.prizeAmount || "");
+            } else if (d.prizeType === "VOUCHER") {
+                prizeText = "Voucher • " + (d.voucherCode || "");
+            } else {
+                prizeText = "-";
+            }
+
+            var now = new Date().getTime();
+            var endPretty = formatDateTime(d.endDate);
+            var soonLabel = "";
+            if (d.endDate) {
+                var tEnd = new Date(d.endDate).getTime();
+                if (!isNaN(tEnd) && tEnd > now && (tEnd - now) <= (24 * 60 * 60 * 1000)) {
+                    soonLabel = "<span class='badge-ending-soon ms-2'>Ending soon</span>";
+                }
+            }
+
+            var joinHtml;
+            if (isJoined) {
+                joinHtml = "<span class='badge-joined me-2'>Joined</span>";
+            } else {
+                joinHtml = "<button class='btn btn-dark btn-sm me-2' onclick='joinDraw(" + d.id + ")'>Join Now</button>";
+            }
+
+            joinHtml += "<button class='btn btn-outline-secondary btn-sm' onclick='openDrawDetails(" + d.id + ")'>Details</button>";
+
+            var accessText = "Standard";
+            if (d.voucherCode && d.voucherCode !== "") {
+                accessText = "Voucher: " + d.voucherCode;
+            }
+
+            var card = document.createElement("div");
+            card.className = "draw-card";
+
+            card.innerHTML =
+                "<div class='d-flex justify-content-between align-items-start'>" +
+                "  <div>" +
+                "    <h5 class='mb-1'>" + escapeHtml(d.name || "Draw") + "</h5>" +
+                "    <div class='draw-meta mb-1'>Prize: <strong>" + escapeHtml(prizeText) + "</strong></div>" +
+                "    <div class='draw-meta mb-1'>Starts: " + formatDateTime(d.startDate) + "</div>" +
+                "    <div class='draw-meta'>Ends: " + endPretty + "</div>" +
+                "  </div>" +
+                "  <div class='text-end'>" +
+                "    <div class='mb-2'><span class='draw-pill'>" + escapeHtml(accessText) + "</span> " + soonLabel + "</div>" +
+                     joinHtml +
+                "  </div>" +
+                "</div>";
+
+            container.appendChild(card);
+        }
+
+        if (visible === 0) {
+            container.innerHTML = "<div class='empty-box'>No draws match your filters.</div>";
+        }
+    }
+
+    // JOIN FLOW WITH VOUCHER LOGIC (A: ask only if SPECIFIC)
+    function joinDraw(drawId) {
+        if (!userId) {
+            showToast("Please login or join as guest first", false);
+            redirectTo("/user/login.html");
+            return;
+        }
+
+        // Find draw
+        var d = null;
+        var i;
+        for (i = 0; i < allActiveDraws.length; i++) {
+            if (allActiveDraws[i].id === drawId) {
+                d = allActiveDraws[i];
+                break;
+            }
+        }
+        if (!d) {
+            showToast("Draw not found in list", false);
+            return;
+        }
+
+        // If draw has no voucher, join directly
+        if (!d.voucherCode || d.voucherCode === "") {
+            doJoin(drawId, null);
+            return;
+        }
+
+        // Draw has voucherCode: check voucher details using validate
+        apiFetch("/vouchers/validate", "POST", { code: d.voucherCode })
+            .then(function (json) {
+                if (!json || !json.success || !json.data) {
+                    // cannot validate, fallback: ask voucher
+                    openVoucherModal(drawId, d.voucherCode);
+                    return;
+                }
+
+                var v = json.data;
+                var accessLevel = v.accessLevel || "ALL";
+
+                if (accessLevel === "SPECIFIC") {
+                    // Ask user to enter matching voucher
+                    openVoucherModal(drawId, d.voucherCode);
+                } else {
+                    // ALL / GUEST -> join directly, using userVoucher if we have
+                    var vc = userVoucher && userVoucher !== "" ? userVoucher : d.voucherCode;
+                    doJoin(drawId, vc);
+                }
+            }).catch(function () {
+                // on error, fallback to modal
+                openVoucherModal(drawId, d.voucherCode);
+            });
+    }
+
+    function openVoucherModal(drawId, expectedCode) {
+        document.getElementById("joinVoucherInput").value = "";
+        document.getElementById("joinDrawIdHidden").value = String(drawId);
+        document.getElementById("joinExpectedVoucherHidden").value = expectedCode || "";
+        var modalEl = document.getElementById("joinVoucherModal");
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+
+    function confirmJoinWithVoucher() {
+        var code = document.getElementById("joinVoucherInput").value.trim();
+        var drawId = Number(document.getElementById("joinDrawIdHidden").value);
+        var expected = document.getElementById("joinExpectedVoucherHidden").value;
+
+        if (code === "") {
+            showToast("Please enter voucher code", false);
+            return;
+        }
+
+        // Validate entered code first
+        apiFetch("/vouchers/validate", "POST", { code: code })
+            .then(function (json) {
+                if (!json || !json.success) {
+                    showToast("Invalid voucher code", false);
+                    return;
+                }
+
+                // If draw expects a specific code, enforce it
+                if (expected && expected !== "" && code !== expected) {
+                    showToast("This draw requires a specific voucher code.", false);
+                    return;
+                }
+
+                doJoin(drawId, code);
+
+                // Close modal
+                var modalEl = document.getElementById("joinVoucherModal");
+                var modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            });
+    }
+
+    function doJoin(drawId, voucherCode) {
+        var body = {
+            userId: Number(userId),
+            voucherCode: voucherCode,
+            accountDetailsJson: "{}"
         };
 
-        function loadDraws() {
-            apiFetch("/draws/active?page=" + currentPage + "&size=6", "GET")
-                .then(function (json) {
+        apiFetch("/draws/" + drawId + "/join", "POST", body)
+            .then(function (json) {
+                if (!json) {
+                    showToast("Failed to join draw", false);
+                    return;
+                }
 
-                    if (!json || !json.success) return;
+                if (!json.success) {
+                    if (json.message) showToast(json.message, false);
+                    else showToast("Failed to join draw", false);
+                    return;
+                }
 
-                    var list = json.data.content;
+                showToast("Joined draw successfully!", true);
 
-                    for (var i = 0; i < list.length; i++) {
-                        allDraws.push(list[i]);
-                    }
+                joinedDrawIds[drawId] = true;
 
-                    renderDraws(allDraws);
-                });
-        }
+                // update stats & cards
+                document.getElementById("statJoined").innerText = Object.keys(joinedDrawIds).length;
+                renderDrawCards();
+            })
+            .catch(function () {
+                showToast("Failed to join draw", false);
+            });
+    }
 
-        function renderDraws(list) {
-            var box = document.getElementById("drawBox");
-            box.innerHTML = "";
+    function openDrawDetails(drawId) {
+        apiFetch("/draws/" + drawId, "GET")
+            .then(function (json) {
+                if (!json || !json.success || !json.data) {
+                    showToast("Failed to load draw details", false);
+                    return;
+                }
+                var d = json.data;
+                document.getElementById("detailModalTitle").innerText = d.name || "Draw Details";
 
-            for (var i = 0; i < list.length; i++) {
-                var d = list[i];
+                var prizeType = d.prizeType || "-";
+                var prizeAmount = d.prizeAmount || "-";
+                var voucher = d.voucherCode || "-";
+                var maxWinners = (d.maxWinners !== null && d.maxWinners !== undefined) ? d.maxWinners : "-";
+                var description = d.description || "-";
+                var department = d.department || "-";
+                var startStr = formatDateTime(d.startDate);
+                var endStr = formatDateTime(d.endDate);
 
-                var badge =
-                    d.prizeType === "CASH"
-                        ? "<span class='badge badge-cash'>Cash</span>"
-                        : "<span class='badge badge-voucher'>Voucher</span>";
-
-                var endedClass = d.status === "ENDED" ? "draw-ended" : "";
-                var winClass = d.userWon ? "draw-won" : "";
-
-                var card =
-                    "<div class='col-md-4'>" +
-                    "  <div class='draw-card " + endedClass + " " + winClass + "'>" +
-                    "    <h5>" + d.name + "</h5>" +
-                    "    " + badge + "<br>" +
-                    "    <small>Ends: " + d.endDate + "</small><br><br>" +
-                    "    <button class='btn btn-primary btn-sm' onclick=\"openJoinModal(" + d.id + ", '" + d.name + "')\">Join</button>" +
-                    "  </div>" +
+                var html =
+                    "<div class='row mb-2'>" +
+                    "  <div class='col-md-6'><b>Prize Type:</b> " + escapeHtml(prizeType) + "</div>" +
+                    "  <div class='col-md-6'><b>Prize Amount:</b> " + escapeHtml(prizeAmount) + "</div>" +
+                    "</div>" +
+                    "<div class='row mb-2'>" +
+                    "  <div class='col-md-6'><b>Voucher:</b> " + escapeHtml(voucher) + "</div>" +
+                    "  <div class='col-md-6'><b>Max Winners:</b> " + escapeHtml(maxWinners) + "</div>" +
+                    "</div>" +
+                    "<div class='row mb-2'>" +
+                    "  <div class='col-md-6'><b>Department:</b> " + escapeHtml(department) + "</div>" +
+                    "  <div class='col-md-6'><b>Timer Seconds:</b> " + (d.timerSeconds || "-") + "</div>" +
+                    "</div>" +
+                    "<div class='mb-2'><b>Description:</b><br>" + escapeHtml(description) + "</div>" +
+                    "<div class='row mt-2'>" +
+                    "  <div class='col-md-6'><b>Start:</b> " + startStr + "</div>" +
+                    "  <div class='col-md-6'><b>End:</b> " + endStr + "</div>" +
                     "</div>";
 
-                box.innerHTML += card;
-            }
-        }
+                document.getElementById("detailModalBody").innerHTML = html;
 
-        function applyFilters() {
-            var type = document.getElementById("filterType").value;
-            var sort = document.getElementById("filterSort").value;
+                var modal = new bootstrap.Modal(document.getElementById("drawDetailModal"));
+                modal.show();
+            });
+    }
 
-            var filtered = [];
+    function formatDateTime(iso) {
+        if (!iso) return "-";
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return iso;
 
-            for (var i = 0; i < allDraws.length; i++) {
-                var d = allDraws[i];
+        var day = d.getDate();
+        if (day < 10) day = "0" + day;
 
-                if (type !== "" && d.prizeType !== type) continue;
+        var monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        var month = monthNames[d.getMonth()];
+        var year = d.getFullYear();
 
-                filtered.push(d);
-            }
+        var hours = d.getHours();
+        var minutes = d.getMinutes();
+        var ampm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12;
+        if (hours === 0) hours = 12;
+        if (minutes < 10) minutes = "0" + minutes;
 
-            if (sort === "recent") {
-                filtered.sort(function (a, b) { return new Date(b.startDate) - new Date(a.startDate); });
-            } else {
-                filtered.sort(function (a, b) { return new Date(a.startDate) - new Date(b.startDate); });
-            }
+        return day + " " + month + " " + year + ", " + hours + ":" + minutes + " " + ampm;
+    }
 
-            renderDraws(filtered);
-        }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return "";
+        return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
 
-        function loadMore() {
-            currentPage++;
-            loadDraws();
-        }
-
-        var joinDrawId = null;
-
-        function openJoinModal(id, name) {
-            joinDrawId = id;
-            document.getElementById("joinDrawTitle").innerText = name;
-            document.getElementById("joinVoucher").value = "";
-            new bootstrap.Modal(document.getElementById("joinModal")).show();
-        }
-
-        function confirmJoin() {
-            var voucher = document.getElementById("joinVoucher").value;
-
-            var body = {
-                userId: userId,
-                voucherCode: voucher,
-                accountDetailsJson: "{}"
-            };
-
-            apiFetch("/draws/" + joinDrawId + "/join", "POST", body)
-                .then(function (json) {
-
-                    if (!json || !json.success) {
-                        showToast("Unable to join draw", false);
-                        return;
-                    }
-
-                    showToast("Joined successfully!", true);
-                    setTimeout(function () { location.reload(); }, 800);
-                });
-        }
-
-        function exportCsv() {
-            redirectTo("/users/" + userId + "/draws/history/export?format=csv");
-        }
-
-        function exportPdf() {
-            redirectTo("/users/" + userId + "/draws/history/export?format=pdf");
-        }
-
-        function redirectTo(url) {
-            window.location.href = url;
-        }
-
-        function logoutUser() {
+    function logoutUser() {
+        try {
             localStorage.removeItem("userId");
-            redirectTo("/user/login.html");
-        }
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userVoucher");
+        } catch (e) {}
+        redirectTo("/user/login.html");
+    }
 
-    </script>
+    function redirectTo(url) {
+        window.location.href = url;
+    }
+</script>
 
 </body>
-
 </html>

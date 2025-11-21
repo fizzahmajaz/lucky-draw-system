@@ -38,7 +38,7 @@ public class AdminParticipantServiceImpl implements AdminParticipantService {
                 .phone(pd.getUser().getPhone())
                 .department(pd.getUser().getDepartment())
                 .externalId(pd.getUser().getExternalId())
-                .voucherUsed(pd.getVoucherUsed() != null ? pd.getVoucherUsed().getCode() : null)
+                .voucherUsed(pd.getVoucherUsed())
                 .winner(pd.isWinner())
                 .redeemed(pd.isRedeemed())
                 .build());

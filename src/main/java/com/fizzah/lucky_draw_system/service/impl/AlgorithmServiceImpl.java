@@ -1,13 +1,14 @@
 package com.fizzah.lucky_draw_system.service.impl;
 
 import com.fizzah.lucky_draw_system.entity.*;
-import com.fizzah.lucky_draw_system.enums.PrizeType;
 import com.fizzah.lucky_draw_system.exception.ExceededWinnersLimitException;
 import com.fizzah.lucky_draw_system.exception.NotFoundException;
 import com.fizzah.lucky_draw_system.repository.*;
 import com.fizzah.lucky_draw_system.service.AlgorithmService;
 import com.fizzah.lucky_draw_system.service.EmailService;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,24 +24,16 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     private final ParticipantDrawRepository participantDrawRepository;
     private final WinnerHistoryRepository winnerHistoryRepository;
     private final EmailService emailService;
-    private final VoucherRepository voucherRepository;
 
-    /**
-     * Executes the winner selection algorithm.
-     * - Validates numberOfWinners <= participants count
-     * - Uses SecureRandom for unique selection
-     * - Persists WinnerHistory entries
-     * - Sets participantDraw.isWinner = true
-     * - Sets draw.status = ENDED
-     * - Sends winner email notifications
-     */
     @Override
     @Transactional
     public List<WinnerHistory> executeAlgorithm(Long drawId, int numberOfWinners, Long adminId) {
 
+        // Fetch draw
         Draw draw = drawRepository.findById(drawId)
                 .orElseThrow(() -> new NotFoundException("Draw not found"));
 
+        // Fetch participants
         List<ParticipantDraw> participants = participantDrawRepository.findByDrawId(drawId);
 
         if (participants == null || participants.isEmpty()) {
@@ -52,7 +45,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
             throw new ExceededWinnersLimitException("You are exceeding winners limit.");
         }
 
-        // Secure unique random selection
+        // Generate secure unique random numbers
         SecureRandom secureRandom;
         try {
             secureRandom = SecureRandom.getInstanceStrong();
@@ -60,7 +53,6 @@ public class AlgorithmServiceImpl implements AlgorithmService {
             secureRandom = new SecureRandom();
         }
 
-        // if numberOfWinners == total then everyone wins
         Set<Integer> winnerIndexes = new HashSet<>();
         while (winnerIndexes.size() < numberOfWinners) {
             int idx = secureRandom.nextInt(total);
@@ -68,46 +60,39 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         }
 
         List<WinnerHistory> winnersSaved = new ArrayList<>();
-
         LocalDateTime now = LocalDateTime.now();
 
-        // If draw has a voucher, fetch it (admin-provided)
-        Voucher prizeVoucher = null;
-        if (draw.getPrizeType() == PrizeType.VOUCHER && draw.getVoucher() != null) {
-            prizeVoucher = voucherRepository.findById(draw.getVoucher().getId()).orElse(null);
-        }
-
+        // ----------------------------------
+        // CREATE WINNER HISTORY ENTRIES
+        // ----------------------------------
         for (Integer idx : winnerIndexes) {
             ParticipantDraw pd = participants.get(idx);
 
-            // mark participant as winner
+            // Mark participant as winner
             pd.setWinner(true);
             participantDrawRepository.save(pd);
 
+            // Save winner record
             WinnerHistory wh = new WinnerHistory();
             wh.setDraw(draw);
             wh.setUser(pd.getUser());
-            if (draw.getPrizeType() == PrizeType.CASH) {
-                wh.setPrizeAmount(draw.getPrizeAmount());
-            } else if (draw.getPrizeType() == PrizeType.VOUCHER && prizeVoucher != null) {
-                wh.setVoucher(prizeVoucher);
-            }
+            wh.setPrizeAmount(null); // No cash system, using STRING prize
             wh.setAnnouncedAt(now);
             wh.setRedeemed(false);
             wh.setAdminNote("Selected by algorithm");
+
             WinnerHistory saved = winnerHistoryRepository.save(wh);
             winnersSaved.add(saved);
 
-            // send winner notification email (async if EmailService implements @Async)
+            // Send email notification
             try {
                 emailService.sendWinnerEmail(pd.getUser(), draw, saved);
             } catch (Exception ex) {
-                // swallow emailing exception but log stacktrace
                 ex.printStackTrace();
             }
         }
 
-        // update draw status to ENDED
+        // Mark draw as ended
         draw.setStatus(com.fizzah.lucky_draw_system.enums.DrawStatus.ENDED);
         drawRepository.save(draw);
 

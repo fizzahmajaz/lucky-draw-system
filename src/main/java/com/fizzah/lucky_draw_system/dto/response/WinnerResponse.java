@@ -13,8 +13,7 @@ public class WinnerResponse {
     private Long userId;
     private String name;
     private String email;
-    private Double prizeAmount; // for cash
-    private String voucherCode; // for voucher draws (only returned to admin or winner checks)
+    private String prize;
     private LocalDateTime announcedAt;
     private boolean redeemed;
 }

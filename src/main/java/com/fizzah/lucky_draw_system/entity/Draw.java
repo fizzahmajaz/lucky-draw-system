@@ -2,26 +2,9 @@ package com.fizzah.lucky_draw_system.entity;
 
 import java.util.Date;
 import java.time.LocalDateTime;
-
 import com.fizzah.lucky_draw_system.enums.DrawStatus;
-import com.fizzah.lucky_draw_system.enums.PrizeType;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Data
@@ -29,21 +12,22 @@ import lombok.NoArgsConstructor;
 @Table(name = "draws")
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class Draw {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
 
-    @Enumerated(EnumType.STRING)
-    private PrizeType prizeType;
-    private Double prizeAmount;
+    // FRONTEND: "Win iPhone", "Win 2 Lakh", etc.
+    private String prize;
 
-    @ManyToOne
-    @JoinColumn(name = "voucher_id")
-    private Voucher voucher;
+    // FRONTEND: voucher code user typed OR null
+    private String voucherCode;
+
+    // FRONTEND: ALL / RESTRICTED
+    private String voucherAccessLevel;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "start_date")
@@ -54,7 +38,8 @@ public class Draw {
     private Date endDate;
 
     @Column(columnDefinition = "TEXT")
-    private String Description;
+    private String description;
+
     private String department;
 
     @Column(name = "timer_seconds")
@@ -62,13 +47,13 @@ public class Draw {
 
     @Enumerated(EnumType.STRING)
     private DrawStatus status;
-    private Integer MaxWinner;
+
+    private Integer maxWinners;
 
     @ManyToOne
     @JoinColumn(name = "created_by_admin")
     private Admin createdByAdmin;
 
     @Column(name = "created_at")
-    private LocalDateTime createdat;
-
+    private LocalDateTime createdAt;
 }

@@ -4,14 +4,16 @@ import com.fizzah.lucky_draw_system.entity.*;
 import com.fizzah.lucky_draw_system.enums.EmailStatus;
 import com.fizzah.lucky_draw_system.repository.EmailLogRepository;
 import com.fizzah.lucky_draw_system.service.EmailService;
+
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.MessagingException;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import jakarta.mail.MessagingException;
-
 
 import java.time.LocalDateTime;
 
@@ -23,7 +25,7 @@ public class EmailServiceImpl implements EmailService {
     private final EmailLogRepository emailLogRepository;
 
     // -----------------------
-    // CORE SENDER
+    // CORE EMAIL SENDER
     // -----------------------
     @Transactional
     public void sendEmail(String to, String subject, String body) {
@@ -35,36 +37,36 @@ public class EmailServiceImpl implements EmailService {
         log.setSentAt(LocalDateTime.now());
 
         try {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
 
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(body, true); // HTML enabled
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true); // HTML
 
-        mailSender.send(message);
+            mailSender.send(message);
 
-        log.setStatus(EmailStatus.SENT);
-        log.setResponse("OK");
+            log.setStatus(EmailStatus.SENT);
+            log.setResponse("OK");
 
-    } catch (MessagingException | MailException ex) {   // <-- FIXED HERE
-        ex.printStackTrace();
-        log.setStatus(EmailStatus.FAILED);
-        log.setResponse(ex.getMessage());
+        } catch (MessagingException | MailException ex) {
+            ex.printStackTrace();
+            log.setStatus(EmailStatus.FAILED);
+            log.setResponse(ex.getMessage());
+        }
+
+        emailLogRepository.save(log);
     }
 
-    emailLogRepository.save(log);
-}
-
     // -----------------------
-    // TEMPLATE 1 — Registration Success
+    // REGISTRATION TEMPLATE
     // -----------------------
     private String buildRegistrationTemplate(User user) {
         return """
                 <h2>Welcome to the Lucky Draw System!</h2>
                 <p>Assalamualaikum <b>%s</b>,</p>
                 <p>Your account has been created successfully.</p>
-                <p>You can now join active draws and participate.</p>
+                <p>You can now join active draws.</p>
                 <br>
                 <p>JazakAllah Khair,<br>Lucky Draw System</p>
                 """.formatted(user.getName());
@@ -72,23 +74,21 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendRegistrationEmail(User user) {
-        sendEmail(
-                user.getEmail(),
+        sendEmail(user.getEmail(),
                 "Registration Successful",
-                buildRegistrationTemplate(user)
-        );
+                buildRegistrationTemplate(user));
     }
 
     // -----------------------
-    // TEMPLATE 2 — Draw Joined Confirmation
+    // DRAW JOINED TEMPLATE
     // -----------------------
     private String buildJoinedTemplate(User user, Draw draw) {
         return """
                 <h2>You have joined a draw!</h2>
                 <p>Assalamualaikum <b>%s</b>,</p>
-                <p>You have successfully joined the draw:</p>
+                <p>You have successfully joined:</p>
                 <h3>%s</h3>
-                <p>Prize Type: <b>%s</b></p>
+                <p>Prize: <b>%s</b></p>
                 <p>Start: %s</p>
                 <p>End: %s</p>
                 <br>
@@ -96,7 +96,7 @@ public class EmailServiceImpl implements EmailService {
                 """.formatted(
                 user.getName(),
                 draw.getName(),
-                draw.getPrizeType(),
+                draw.getPrize(),
                 draw.getStartDate(),
                 draw.getEndDate()
         );
@@ -112,33 +112,23 @@ public class EmailServiceImpl implements EmailService {
     }
 
     // -----------------------
-    // TEMPLATE 3 — Winner Announcement
+    // WINNER TEMPLATE
     // -----------------------
     private String buildWinnerTemplate(User user, Draw draw, WinnerHistory history) {
 
-        String prizeMessage;
-
-        if (draw.getPrizeType().name().equals("CASH")) {
-            prizeMessage = "<p>You won a cash prize of <b>" + draw.getPrizeAmount() + "</b>.</p>"
-                    + "<p>Amount will be sent to your account shortly.</p>";
-        } else {
-            prizeMessage = "<p>You won a prize voucher!</p>"
-                    + "<p>Your voucher code: <b>" + history.getVoucher().getCode() + "</b></p>";
-        }
-
         return """
-                <h2>Congratulations! You are a WINNER 🎉</h2>
+                <h2>🎉 Congratulations! You are a WINNER 🎉</h2>
                 <p>Assalamualaikum <b>%s</b>,</p>
                 <p>You have won the lucky draw:</p>
                 <h3>%s</h3>
-                %s
+                <p>Prize: <b>%s</b></p>
                 <p>Announced At: %s</p>
                 <br>
                 <p>May Allah grant you more barakah.</p>
                 """.formatted(
                 user.getName(),
                 draw.getName(),
-                prizeMessage,
+                draw.getPrize(),
                 history.getAnnouncedAt()
         );
     }
@@ -149,34 +139,6 @@ public class EmailServiceImpl implements EmailService {
                 user.getEmail(),
                 "🎉 You are a Winner!",
                 buildWinnerTemplate(user, draw, history)
-        );
-    }
-
-    // -----------------------
-    // TEMPLATE 4 — Voucher Redeemed
-    // -----------------------
-    private String buildRedeemTemplate(User user, Voucher voucher) {
-        return """
-                <h2>Voucher Redeemed Successfully</h2>
-                <p>Assalamualaikum <b>%s</b>,</p>
-                <p>Your prize voucher has been redeemed:</p>
-                <h3>%s</h3>
-                <p>Voucher Code: <b>%s</b></p>
-                <br>
-                <p>Enjoy your reward!</p>
-                """.formatted(
-                user.getName(),
-                voucher.getName(),
-                voucher.getCode()
-        );
-    }
-
-    @Override
-    public void sendVoucherRedeemEmail(User user, Voucher voucher) {
-        sendEmail(
-                user.getEmail(),
-                "Voucher Redeemed Successfully",
-                buildRedeemTemplate(user, voucher)
         );
     }
 }
